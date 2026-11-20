@@ -1,0 +1,2755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#3b1d7a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>RANDOM MIND — Think. Guess. Learn!</title>
+
+  <!-- Google Fonts: Fredoka for playful rounded game headers & Nunito for crisp readable UI -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    /* ==========================================================================
+       RANDOM MIND — DESIGN TOKENS & STRICT UI RULES
+       - Purple & blue fantasy starry background
+       - Soft clouds decorating the bottom
+       - Rounded typography & compact mobile-first layout
+       - STRICT RULE: NO button click scale/bouncing/glowing/pressing animations
+       ========================================================================== */
+    :root {
+      --bg-deep: #261159;
+      --bg-mid: #3f218c;
+      --bg-blue: #27469e;
+      --lavender-card: #f5f2ff;
+      --lavender-border: #d9ceff;
+      --purple-ink: #351a75;
+      --yellow-logo: #ffd93b;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    input {
+      user-select: text;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      font-family: 'Nunito', sans-serif;
+      background: radial-gradient(circle at top, #1b0d42 0%, #100729 100%);
+      color: #2c1663;
+      overflow: hidden;
+    }
+
+    .font-logo {
+      font-family: 'Fredoka', sans-serif;
+    }
+
+    /* Mobile App Shell: Full screen on mobile, centered phone viewport on desktop */
+    .app-shell {
+      position: relative;
+      width: 100%;
+      max-width: 440px;
+      height: 100dvh;
+      max-height: 900px;
+      margin: 0 auto;
+      background: linear-gradient(180deg, #2d166b 0%, #442499 42%, #2f4eb0 78%, #5b7be0 100%);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+    }
+
+    @media (min-width: 480px) {
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px;
+      }
+      .app-shell {
+        height: calc(100dvh - 24px);
+        border-radius: 32px;
+        border: 3px solid rgba(255, 255, 255, 0.18);
+      }
+    }
+
+    /* Starry Sky Layer */
+    .star-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .star-dot {
+      position: absolute;
+      border-radius: 9999px;
+      background: #ffffff;
+      box-shadow: 0 0 6px rgba(255, 255, 255, 0.85);
+    }
+
+    .star-four {
+      position: absolute;
+      pointer-events: none;
+    }
+
+    /* Bottom Clouds Layer */
+    .clouds-footer {
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      right: 0;
+      width: 100%;
+      pointer-events: none;
+      z-index: 1;
+      line-height: 0;
+    }
+
+    /* Main Scrollable Screen Container */
+    .screen-body {
+      position: relative;
+      z-index: 5;
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 16px 18px 24px;
+      display: flex;
+      flex-direction: column;
+      scrollbar-width: none;
+    }
+
+    .screen-body::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* RANDOM MIND Logo Styling (White RANDOM, Yellow MIND, heavy purple outline & drop shadow) */
+    .rm-logo-wrap {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      line-height: 0.94;
+      text-align: center;
+    }
+
+    .rm-word-random {
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: 0.03em;
+      -webkit-text-stroke: 5px #38187a;
+      paint-order: stroke fill;
+      text-shadow: 0 4px 0 #260f57, 0 6px 12px rgba(20, 6, 56, 0.45);
+    }
+
+    .rm-word-mind {
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 700;
+      color: #ffd93b;
+      letter-spacing: 0.04em;
+      -webkit-text-stroke: 5px #38187a;
+      paint-order: stroke fill;
+      text-shadow: 0 4px 0 #260f57, 0 6px 12px rgba(20, 6, 56, 0.45);
+    }
+
+    /* Clean, tactile game buttons — NO bouncing, scaling, glowing, or pressing animations */
+    .rm-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border-radius: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      border: 2px solid rgba(255, 255, 255, 0.35);
+      box-shadow: 0 4px 0 rgba(33, 14, 79, 0.38);
+      transition: background-color 0.15s ease, opacity 0.15s ease;
+    }
+
+    .rm-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-green {
+      background: linear-gradient(180deg, #43d97b 0%, #24b35b 100%);
+      color: #ffffff;
+      border-color: #8cf2b0;
+      box-shadow: 0 4px 0 #167a3c;
+    }
+    .btn-green:hover:not(:disabled) {
+      background: linear-gradient(180deg, #3ac96f 0%, #1fa151 100%);
+    }
+
+    .btn-blue {
+      background: linear-gradient(180deg, #4da6ff 0%, #2678e8 100%);
+      color: #ffffff;
+      border-color: #99ccff;
+      box-shadow: 0 4px 0 #174fa3;
+    }
+    .btn-blue:hover:not(:disabled) {
+      background: linear-gradient(180deg, #4298f0 0%, #1f6bd4 100%);
+    }
+
+    .btn-purple {
+      background: linear-gradient(180deg, #9d6bff 0%, #713ce0 100%);
+      color: #ffffff;
+      border-color: #cbb0ff;
+      box-shadow: 0 4px 0 #48209e;
+    }
+    .btn-purple:hover:not(:disabled) {
+      background: linear-gradient(180deg, #8f5cf2 0%, #6432cf 100%);
+    }
+
+    .btn-orange {
+      background: linear-gradient(180deg, #ff9f43 0%, #eb7317 100%);
+      color: #ffffff;
+      border-color: #ffd0a1;
+      box-shadow: 0 4px 0 #a64a05;
+    }
+    .btn-orange:hover:not(:disabled) {
+      background: linear-gradient(180deg, #f29238 0%, #d9670f 100%);
+    }
+
+    .btn-pink {
+      background: linear-gradient(180deg, #ff6fa5 0%, #e03e7b 100%);
+      color: #ffffff;
+      border-color: #ffb8d3;
+      box-shadow: 0 4px 0 #991f4e;
+    }
+    .btn-pink:hover:not(:disabled) {
+      background: linear-gradient(180deg, #f06297 0%, #cc336d 100%);
+    }
+
+    .btn-lavender {
+      background: #f4f0ff;
+      color: #361b78;
+      border-color: #d6c8ff;
+      box-shadow: 0 3px 0 #b8a3f5;
+    }
+    .btn-lavender:hover:not(:disabled) {
+      background: #eae3ff;
+    }
+
+    /* Pastel Lavender Card */
+    .lavender-card {
+      background: rgba(248, 245, 255, 0.96);
+      border: 2px solid #dfd4ff;
+      border-radius: 22px;
+      box-shadow: 0 8px 20px rgba(24, 9, 64, 0.25);
+    }
+
+    /* Answer Option Pill */
+    .option-card {
+      width: 100%;
+      text-align: left;
+      background: #ffffff;
+      border: 2px solid #ded4ff;
+      border-radius: 15px;
+      padding: 11px 13px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      box-shadow: 0 3px 0 #cfc0fa;
+      transition: background-color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .option-card:hover:not(:disabled) {
+      background: #f5f1ff;
+      border-color: #a98eff;
+    }
+
+    .option-card.selected {
+      background: #ebe3ff;
+      border-color: #6f3ee0;
+      box-shadow: 0 3px 0 #5528bd;
+    }
+
+    .option-card.correct {
+      background: #dcfce7;
+      border-color: #22c55e;
+      box-shadow: 0 3px 0 #15803d;
+    }
+
+    .option-card.incorrect {
+      background: #fee2e2;
+      border-color: #ef4444;
+      box-shadow: 0 3px 0 #b91c1c;
+    }
+
+    .option-card:disabled {
+      cursor: default;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="app-shell">
+    <!-- Starry Sky Decorative Backdrop -->
+    <div id="star-layer" class="star-layer" aria-hidden="true"></div>
+
+    <!-- Active Screen View Mount -->
+    <div id="screen-root" class="relative z-10 flex-1 flex flex-col overflow-hidden"></div>
+
+    <!-- Modal / Popup Overlay Mount (Hint Popup, Legal Info, Confirmations, Toast) -->
+    <div id="modal-root"></div>
+  </div>
+
+  <script>
+    /* ==========================================================================
+       1. PWA MANIFEST & SERVICE WORKER REGISTRATION
+       ========================================================================== */
+    const PWA_STATUS = {
+      manifestReady: false,
+      swState: 'Initializing...'
+    };
+
+    (function initPWA() {
+      try {
+        // Generate crisp SVG app icon data URL for manifest
+        const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect width="192" height="192" rx="42" fill="#3b1d7a"/><circle cx="96" cy="86" r="52" fill="#ff9ec4" stroke="#5c1d45" stroke-width="6"/><circle cx="76" cy="82" r="14" fill="#ffffff" stroke="#351a75" stroke-width="5"/><circle cx="116" cy="82" r="14" fill="#ffffff" stroke="#351a75" stroke-width="5"/><line x1="90" y1="82" x2="102" y2="82" stroke="#351a75" stroke-width="5"/><rect x="64" y="114" width="64" height="36" rx="6" fill="#7c3aed" stroke="#351a75" stroke-width="5"/></svg>`;
+        const iconUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(iconSvg);
+
+        const manifest = {
+          name: 'RANDOM MIND — Think. Guess. Learn!',
+          short_name: 'RANDOM MIND',
+          description: 'Colorful, educational general knowledge quiz game.',
+          start_url: './',
+          display: 'standalone',
+          background_color: '#2d166b',
+          theme_color: '#3b1d7a',
+          icons: [
+            { src: iconUrl, sizes: '192x192', type: 'image/svg+xml' },
+            { src: iconUrl, sizes: '512x512', type: 'image/svg+xml' }
+          ]
+        };
+
+        const manifestLink = document.createElement('link');
+        manifestLink.rel = 'manifest';
+        manifestLink.href = 'data:application/manifest+json;charset=utf-8,' + encodeURIComponent(JSON.stringify(manifest));
+        document.head.appendChild(manifestLink);
+        PWA_STATUS.manifestReady = true;
+
+        // Register Service Worker if supported and not blocked by sandboxed blob origin
+        if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
+          const swCode = `
+            const CACHE_NAME = 'random-mind-v1';
+            self.addEventListener('install', (event) => {
+              self.skipWaiting();
+            });
+            self.addEventListener('activate', (event) => {
+              event.waitUntil(self.clients.claim());
+            });
+            self.addEventListener('fetch', (event) => {
+              event.respondWith(
+                caches.match(event.request).then((cached) => cached || fetch(event.request).catch(() => cached))
+              );
+            });
+          `;
+          const blob = new Blob([swCode], { type: 'application/javascript' });
+          const swUrl = URL.createObjectURL(blob);
+          navigator.serviceWorker.register(swUrl)
+            .then(() => { PWA_STATUS.swState = 'Active (Offline Ready)'; })
+            .catch(() => { PWA_STATUS.swState = 'Local Cache Active (Sandbox Preview)'; });
+        } else {
+          PWA_STATUS.swState = 'Local Storage Offline Ready';
+        }
+      } catch (e) {
+        PWA_STATUS.swState = 'Local Storage Offline Ready';
+      }
+    })();
+
+    /* ==========================================================================
+       2. CURATED QUESTION BANK (102 Questions across all 17 categories & 3 tiers)
+       - Zero math-only questions
+       - Scientific & educational Reproductive Biology questions
+       - Every question has: difficulty, category, question, options[4], correctIndex, hint
+       ========================================================================== */
+    const QUESTION_BANK = [
+      // --- 1. REPRODUCTIVE SYSTEM AND REPRODUCTIVE BIOLOGY (6 questions) ---
+      {
+        difficulty: 'Easy',
+        category: 'Reproductive System and Reproductive Biology',
+        question: 'Which organ system is responsible for producing gametes (egg and sperm cells) in humans?',
+        options: ['Digestive system', 'Reproductive system', 'Respiratory system', 'Skeletal system'],
+        correctIndex: 1,
+        hint: 'Its name directly refers to creating new offspring.'
+      },
+      {
+        difficulty: 'Easy',
+        category: 'Reproductive System and Reproductive Biology',
+        question: 'What is the biological term for the union of an egg cell and a sperm cell?',
+        options: ['Photosynthesis', 'Fertilization', 'Osmosis', 'Respiration'],
+        correctIndex: 1,
+        hint: 'This event forms a single fertilized cell called a zygote.'
+      },
+      {
+        difficulty: 'Normal',
+        category: 'Reproductive System and Reproductive Biology',
+        question: 'In human female reproductive biology, where does fertilization typically occur?',
+        options: ['Fallopian tube (oviduct)', 'Stomach', 'Thyroid gland', 'Pancreas'],
+        correctIndex: 0,
+        hint: 'It is the slender tube connecting an ovary to the uterus.'
+      },
+      {
+        difficulty: 'Normal',
+        category: 'Reproductive System and Reproductive Biology',
+        question: 'Which structure nourishes and exchanges oxygen and nutrients with a developing fetus during pregnancy?',
+        options: ['Appendix', 'Placenta', 'Gallbladder', 'Epiglottis'],
+        correctIndex: 1,
+        hint: 'It connects to the fetus via the umbilical cord.'
+      },
+      {
+        difficulty: 'Hard',
+        category: 'Reproductive System and Reproductive Biology',
+        question: 'Which pituitary hormone surges mid-cycle to trigger ovulation in the human menstrual cycle?',
+        options: ['Luteinizing hormone (LH)', 'Insulin', 'Melatonin', 'Calcitonin'],
+        correctIndex: 0,
+        hint: 'Abbreviated LH, it works alongside follicle-stimulating hormone.'
+      },
+      {
+        difficulty: 'Hard',
+        category: 'Reproductive System and Reproductive Biology',
+        question: 'How many chromosomes are normally present in a mature human gamete (egg or sperm cell)?',
+        options: ['46 chromosomes', '23 chromosomes', '92 chromosomes', '12 chromosomes'],
+        correctIndex: 1,
+        hint: 'It is exactly half of the 46 chromosomes found in typical human body cells.'
+      },
+
+      // --- 2. GENERAL SCIENCE (6 questions) ---
+      {
+        difficulty: 'Easy',
+        category: 'General Science',
+        question: 'What gas do plants absorb from the atmosphere during photosynthesis?',
+        options: ['Carbon dioxide', 'Helium', 'Neon', 'Argon'],
+        correctIndex: 0,
+        hint: 'Humans exhale this gas, and plants use it with sunlight to make glucose.'
+      },
+      {
+        difficulty: 'Easy',
+        category: 'General Science',
+        question: 'At standard atmospheric pressure, at what state is water at room temperature (20°C)?',
+        options: ['Solid', 'Liquid', 'Gas', 'Plasma'],
+        correctIndex: 1,
+        hint: 'It flows freely and takes the shape of its glass.'
+      },
+      {
+        difficulty: 'Normal',
+        category: 'General Science',
+        question: 'Which planet in our solar system has the strongest gravitational pull due to its massive size?',
+        options: ['Mars', 'Jupiter', 'Mercury', 'Venus'],
+        correctIndex: 1,
+        hint: 'It is the largest gas giant and features the Great Red Spot.'
+      },
+      {
+        difficulty: 'Normal',
+        category: 'General Science',
+        question: 'Why does ice float on top of liquid water?',
+        options: ['Ice is warmer than water', 'Ice is less dense than liquid water', 'Ice contains trapped helium', 'Water pushes solids upward'],
+        correctIndex: 1,
+        hint: 'Water expands slightly when it freezes into a crystal lattice.'
+      },
+      {
+        difficulty: 'Hard',
+        category: 'General Science',
+        question: 'What phenomenon causes a straw in a glass of water to appear bent at the surface?',
+        options: ['Diffraction', 'Refraction', 'Sublimation', 'Convection'],
+        correctIndex: 1,
+        hint: 'Light changes speed and direction when passing from air into water.'
+      },
+      {
+        difficulty: 'Hard',
+        category: 'General Science',
+        question: 'Which subatomic particle determines the atomic number and identity of a chemical element?',
+        options: ['Neutron', 'Proton', 'Photon', 'Positron'],
+        correctIndex: 1,
+        hint: 'This positively charged particle resides inside the atomic nucleus.'
+      },
+
+      // --- 3. BIOLOGY (6 questions) ---
+      {
+        difficulty: 'Easy',
+        category: 'Biology',
+        question: 'Which part of a plant cell captures sunlight to perform photosynthesis?',
+        options: ['Chloroplast', 'Cell wall', 'Vacuole', 'Ribosome'],
+        correctIndex: 0,
+        hint: 'This organelle contains the green pigment chlorophyll.'
+      },
+      {
+        difficulty: 'Easy',
+        category: 'Biology',
+        question: 'Which organ pumps oxygenated blood throughout the human body?',
+        options: ['Lungs', 'Heart', 'Liver', 'Kidneys'],
+        correctIndex: 1,
+        hint: 'It beats rhythmically inside your chest.'
+      },
+      {
+        difficulty: 'Normal',
+        category: 'Biology',
+        question: 'What are the building blocks that link together to form proteins?',
+        options: ['Fatty acids', 'Amino acids', 'Simple sugars', 'Nucleotides'],
+        correctIndex: 1,
+        hint: 'There are 20 standard types encoded by our genetic code.'
+      },
+      {
+        difficulty: 'Normal',
+        category: 'Biology',
+        question: 'Which blood cells are primarily responsible for fighting infections in the immune system?',
+        options: ['Red blood cells', 'White blood cells', 'Platelets', 'Plasma cells only'],
+        correctIndex: 1,
+        hint: 'Also called leukocytes, they defend the body against pathogens.'
+      },
+      {
+        difficulty: 'Hard',
+        category: 'Biology',
+        question: 'Which molecule carries genetic instructions from DNA in the nucleus to ribosomes in the cytoplasm?',
+        options: ['Messenger RNA (mRNA)', 'ATP', 'Hemoglobin', 'Glycogen'],
+        correctIndex: 0,
+        hint: 'The "m" stands for messenger.'
+      },
+      {
+        difficulty: 'Hard',
+        category: 'Biology',
+        question: 'What type of symbiotic relationship benefits both organisms involved?',
+        options: ['Parasitism', 'Mutualism', 'Commensalism', 'Predation'],
+        correctIndex: 1,
+        hint: 'Think of bees pollinating flowers while gathering nectar.'
+      },
+
+      // --- 4. EVERYDAY LIFE (6 questions) ---
+      {
+        difficulty: 'Easy',
+        category: 'Everyday Life',
+        question: 'Why should you never pour hot cooking grease down a kitchen sink drain?',
+        options: ['It dissolves metal pipes instantly', 'It cools, solidifies, and clogs plumbing', 'It turns into vinegar', 'It makes tap water salty'],
+        correctIndex: 1,
+        hint: 'Liquid fat hardens back into a waxy solid when cold.'
+      },
+      {
+        difficulty: 'Easy',
+        category: 'Everyday Life',
+        question: 'Which household ingredient is commonly used to help bread dough rise by producing carbon dioxide bubbles?',
+        options: ['Table salt', 'Yeast', 'Olive oil', 'Black pepper'],
+        correctIndex: 1,
+        hint: 'It is a living microscopic fungus activated by warm water and sugar.'
+      },
+      {
+        difficulty: 'Normal',
+        category: 'Everyday Life',
+        question: 'Why do sliced apples turn brown after sitting out in the open air?',
+        options: ['Oxidation when enzymes react with oxygen', 'Evaporation of sugar', 'Absorption of nitrogen', 'Freezing of fruit juice'],
+        correctIndex: 0,
+        hint: 'Lemon juice slows this down because vitamin C acts as an antioxidant.'
+      },
+      {
+        difficulty: 'Normal',
+        category: 'Everyday Life',
+        question: 'What does the "SPF" number on a bottle of sunscreen indicate?',
+        options: ['Skin Hydration Factor', 'Sun Protection Factor against UVB rays', 'Salt Prevention Formula', 'Shade Percentage Filter'],
+        correctIndex: 1,
+        hint: 'It measures how well the lotion shields skin from sunburn-causing ultraviolet radiation.'
+      },
+      {
+        difficulty: 'Hard',
+        category: 'Everyday Life',
+        question: 'Why does a pressure cooker cook beans and stews much faster than an ordinary pot?',
+        options: ['Trapped steam raises pressure, increasing water’s boiling point', 'It uses ultraviolet light', 'It removes all oxygen from food', 'Metal walls generate microwaves'],
+        correctIndex: 0,
+        hint: 'Under higher pressure, water can get hotter than 100°C before boiling away.'
+      },
+      {
+        difficulty: 'Hard',
+        category: 'Everyday Life',
+        question: 'What is the safest method to extinguish a small grease fire in a frying pan?',
+        options: ['Pour cold water on it', 'Turn off heat and smother it with a metal lid', 'Fan it with a towel', 'Carry the burning pan outdoors'],
+        correctIndex: 1,
+        hint: 'Cutting off oxygen stops combustion without splattering burning oil.'
+      },
+
+      // --- 5. SITUATIONAL PROBLEMS (6 questions) ---
+      {
+        difficulty: 'Easy',
+        category: 'Situational Problems',
+        question: 'You notice a small puddle of water on a smooth tile floor in a busy hallway. What is the best immediate action?',
+        options: ['Walk past and ignore it', 'Wipe it dry or place a caution sign right away', 'Turn off the hallway lights', 'Run across it quickly'],
+        correctIndex: 1,
+        hint: 'Preventing someone from slipping protects everyone nearby.'
+      },
+      {
+        difficulty: 'Easy',
+        category: 'Situational Problems',
+        question: 'Your phone battery is at 4% during a long trip and you need it for directions at your destination. What helps most?',
+        options: ['Turn on maximum screen brightness', 'Enable Low Power Mode and dim the screen', 'Stream high-definition videos', 'Open multiple camera apps'],
+        correctIndex: 1,
+        hint: 'Reducing display brightness and background tasks conserves remaining charge.'
+      },
+      {
+        difficulty: 'Normal',
+        category: 'Situational Problems',
+        question: 'You receive an urgent message claiming your bank account is locked and asking you to click an unfamiliar link. What should you do?',
+        options: ['Enter your password quickly', 'Contact your bank directly using its official app or phone number', 'Forward the link to friends', 'Reply with your PIN'],
+        correctIndex: 1,
+        hint: 'Verify suspicious alerts through official channels rather than links in messages.'
+      },
+      {
+        difficulty: 'Normal',
+        category: 'Situational Problems',
+        question: 'Two teammates disagree strongly on how to organize a group presentation due tomorrow. What is the most constructive step?',
+        options: ['Refuse to speak until tomorrow', 'List the pros of each idea and combine the clearest structure', 'Delete both drafts', 'Let one person do everything alone without asking'],
+        correctIndex: 1,
+        hint: 'Focusing on shared goals and objective strengths resolves team gridlock.'
+      },
+      {
+        difficulty: 'Hard',
+        category: 'Situational Problems',
+        question: 'While hiking, you realize you have strayed off the marked trail and lost cell signal. What is the safest strategy?',
+        options: ['Run downhill in a random direction', 'Stop, stay calm, assess landmarks, and retrace to the last known marker', 'Split up your group to search faster', 'Climb the tallest tree in the dark'],
+        correctIndex: 1,
+        hint: 'The STOP rule (Stop, Think, Observe, Plan) prevents getting further lost.'
+      },
+      {
+        difficulty: 'Hard',
+        category: 'Situational Problems',
+        question: 'You smell rotten eggs (added odorant for natural gas) when entering your home. What should you NOT do?',
+        options: ['Leave the building immediately', 'Flip light switches or strike a match', 'Call the gas emergency line from outside', 'Leave the door open as you exit'],
+        correctIndex: 1,
+        hint: 'Even a tiny electrical spark inside a wall switch can ignite accumulated gas.'
+      },
+
+      // --- 6. COLORS (6 questions) ---
+      {
+        difficulty: 'Easy',
+        category: 'Colors',
+        question: 'Which two primary paint colors are mixed together to make green?',
+        options: ['Red and Blue', 'Blue and Yellow', 'Red and Yellow', 'Purple and Orange'],
+        correctIndex: 1,
+        hint: 'Think of the color of the sky combined with the color of sunshine.'
+      },
+      {
+        difficulty: 'Easy',
+        category: 'Colors',
+        question: 'Which color is traditionally placed at the very top of a standard vertical traffic light?',
+        options: ['Green', 'Yellow', 'Red', 'Blue'],
+        correctIndex: 2,
+        hint: 'It signals drivers to come to a complete stop.'
+      },
+      {
+        difficulty: 'Normal',
+        category: 'Colors',
+        question: 'In additive light mixing (such as TV and phone screens), what are the three primary colors of light?',
+        options: ['Red, Yellow, Blue', 'Red, Green, Blue (RGB)', 'Cyan, Magenta, Yellow', 'Orange, Purple, Green'],
+        correctIndex: 1,
+        hint: 'Digital displays are named after the initials of these three colors.'
+      },
+      {
+        difficulty: 'Normal',
+        category: 'Colors',
+        question: 'On a traditional color wheel, which color sits directly opposite orange as its complementary color?',
+        options: ['Red', 'Blue', 'Yellow', 'Pink'],
+        correctIndex: 1,
+        hint: 'Warm sunset tones contrast most strongly with cool ocean hues.'
+      },
+      {
+        difficulty: 'Hard',
+        category: 'Colors',
+        question: 'What color does a surface appear in white light if it absorbs all visible wavelengths of light?',
+        options: ['White', 'Black', 'Silver', 'Yellow'],
+        correctIndex: 1,
+        hint: 'When almost no visible light is reflected back to your eyes, you see darkness.'
+      },
+      {
+        difficulty: 'Hard',
+        category: 'Colors',
+        question: 'In color printing (CMYK), what does the letter "K" stand for?',
+        options: ['Kelvin', 'Key (Black ink)', 'Krypton', 'Khaki'],
+        correctIndex: 1,
+        hint: 'Printers use Cyan, Magenta, Yellow, and this dark plate for crisp text and shadows.'
+      },
+
+      // --- 7. PSYCHOLOGY (6 questions) ---
+      {
+        difficulty: 'Easy',
+        category: 'Psychology',
+        question: 'What is the psychological term for the process of retaining and recalling past experiences or facts?',
+        options: ['Reflex', 'Memory', 'Perception', 'Instinct'],
+        correctIndex: 1,
+        hint: 'It includes short-term working storage and long-term storage.'
+      },
+      {
+        difficulty: 'Easy',
+        category: 'Psychology',
+        question: 'Which stage of sleep is most strongly associated with vivid dreaming?',
+        options: ['REM (Rapid Eye Movement) sleep', 'Light drowsiness', 'Midday napping only', 'Sleepwalking stage'],
+        correctIndex: 0,
+        hint: 'During this phase, your eyes move quickly beneath closed eyelids.'
+      },
+      {
+        difficulty: 'Normal',
+        category: 'Psychology',
+        question: 'What is "confirmation bias" in human thinking?',
+        options: ['Forgetting names quickly', 'Favoring information that supports what we already believe', 'Learning a new language faster', 'Feeling tired after studying'],
+        correctIndex: 1,
+        hint: 'It causes people to seek evidence that confirms existing opinions while overlooking contradictions.'
+      },
+      {
+        difficulty: 'Normal',
+        category: 'Psychology',
+        question: 'What is the difference between intrinsic motivation and extrinsic motivation?',
+        options: ['Intrinsic comes from internal enjoyment; extrinsic comes from external rewards', 'Intrinsic only happens at night', 'Extrinsic requires no effort', 'They mean the exact same thing'],
+        correctIndex: 0,
+        hint: 'Curiosity is internal, whereas trophies or points are external.'
+      },
+      {
+        difficulty: 'Hard',
+        category: 'Psychology',
+        question: 'In cognitive psychology, what is "cognitive dissonance"?',
+        options: ['Mental discomfort from holding two conflicting beliefs or actions', 'Enhanced eyesight in the dark', 'The ability to multitask effortlessly', 'Total loss of long-term memory'],
+        correctIndex: 0,
+        hint: 'People often change an attitude or justify behavior to relieve this inner tension.'
+      },
+      {
+        difficulty: 'Hard',
+        category: 'Psychology',
+        question: 'Which memory technique involves grouping individual pieces of information into larger, meaningful units (like phone number segments)?',
+        options: ['Chunking', 'Repression', 'Conditioning', 'Habituation'],
+        correctIndex: 0,
+        hint: 'Breaking a 10-digit string into three smaller groups makes it easier to hold in working memory.'
+      },
+
+      // --- 8. HUMAN BEHAVIOR (6 questions) ---
+      {
+        difficulty: 'Easy',
+        category: 'Human Behavior',
+        question: 'What does maintaining appropriate eye contact during a conversation generally communicate?',
+        options: ['Disinterest', 'Attentiveness and active listening', 'Sleepiness', 'Confusion only'],
+        correctIndex: 1,
+        hint: 'It shows the speaker that you are engaged with what they are saying.'
+      },
+      {
+        difficulty: 'Easy',
+        category: 'Human Behavior',
+        question: 'Why do people often yawn shortly after seeing someone else yawn?',
+        options: ['Contagious yawning linked to empathy and social mirroring', 'Lack of gravity', 'Sudden drop in room temperature', 'Allergies to sound'],
+        correctIndex: 0,
+        hint: 'Mirror neurons in the brain help us automatically mimic social cues.'
+      },
+      {
+        difficulty: 'Normal',
+        category: 'Human Behavior',
+        question: 'What is the "bystander effect" observed in social situations?',
+        options: ['People help faster in huge crowds', 'Individuals are less likely to offer help when many others are present', 'People run faster when watched', 'Crowds always agree on every decision'],
+        correctIndex: 1,
+        hint: 'Everyone assumes someone else in the crowd will step forward first.'
+      },
+      {
+        difficulty: 'Normal',
+        category: 'Human Behavior',
+        question: 'What is "active listening" in interpersonal communication?',
+        options: ['Waiting impatiently to interrupt', 'Fully concentrating, understanding, and responding thoughtfully to the speaker', 'Checking notifications while nodding', 'Memorizing every word silently without feedback'],
+        correctIndex: 1,
+        hint: 'It often involves paraphrasing or asking clarifying questions.'
+      },
+      {
+        difficulty: 'Hard',
+        category: 'Human Behavior',
+        question: 'How does "social proof" influence everyday human decision-making?',
+        options: ['People look to the actions of others to determine appropriate behavior in unfamiliar situations', 'People ignore all reviews and ratings', 'People always choose the opposite of the crowd', 'It only applies to legal contracts'],
+        correctIndex: 0,
+        hint: 'Seeing a busy restaurant often makes passersby assume the food is good.'
+      },
+      {
+        difficulty: 'Hard',
+        category: 'Human Behavior',
+        question: 'What is the "halo effect" when forming impressions of other people?',
+        options: ['Allowing one positive trait (like friendliness) to positively bias judgment of unrelated traits', 'Seeing bright rings around streetlights', 'Remembering only the last item in a list', 'Avoiding group discussions'],
+        correctIndex: 0,
+        hint: 'A strong first impression in one area spills over into how we rate everything else about someone.'
+      },
+
+      // --- 9. GEOGRAPHY (6 questions) ---
+      {
+        difficulty: 'Easy',
+        category: 'Geography',
+        question: 'Which is the largest ocean on Earth by surface area?',
+        options: ['Atlantic Ocean', 'Indian Ocean', 'Pacific Ocean', 'Arctic Ocean'],
+        correctIndex: 2,
+        hint: 'It stretches between Asia/Australia and the Americas.'
+      },
+      {
+        difficulty: 'Easy',
+        category: 'Geography',
+        question: 'On which continent is the Sahara Desert located?',
+        options: ['South America', 'Africa', 'Asia', 'Australia'],
+        correctIndex: 1,
+        hint: 'It spans much of the northern third of this continent.'
+      },
+      {
+        difficulty: 'Normal',
+        category: 'Geography',
+        question: 'Which imaginary line divides the Earth into the Northern and Southern Hemispheres?',
+        options: ['Prime Meridian', 'Equator', 'International Date Line', 'Tropic of Cancer'],
+        correctIndex: 1,
+        hint: 'It sits at 0 degrees latitude.'
+      },
+      {
+        difficulty: 'Normal',
+        category: 'Geography',
+        question: 'Which river carries the largest volume of water of any river in the world?',
+        options: ['Nile River', 'Amazon River', 'Mississippi River', 'Danube River'],
+        correctIndex: 1,
+        hint: 'It flows through South America’s vast tropical rainforest.'
+      },
+      {
+        difficulty: 'Hard',
+        category: 'Geography',
+        question: 'Which strait separates Asia and North America at their closest point?',
+        options: ['Strait of Gibraltar', 'Bering Strait', 'Strait of Malacca', 'Bosporus Strait'],
+        correctIndex: 1,
+        hint: 'It lies between Russia and Alaska.'
+      },
+      {
+        difficulty: 'Hard',
+        category: 'Geography',
+        question: 'What is an archipelago?',
+        options: ['A deep desert canyon', 'A chain or cluster of islands', 'A high mountain glacier', 'An underground river cave'],
+        correctIndex: 1,
+        hint: 'Indonesia, Japan, and the Philippines are famous examples.'
+      },
+
+      // --- 10. CULTURE (6 questions) ---
+      {
+        difficulty: 'Easy',
+        category: 'Culture',
+        question: 'Origami, the traditional art of paper folding, originated in which country?',
+        options: ['Japan', 'Brazil', 'Norway', 'Egypt'],
+        correctIndex: 0,
+        hint: 'Paper cranes are one of its most iconic creations.'
+      },
+      {
+        difficulty: 'Easy',
+        category: 'Culture',
+        question: 'Which festival, celebrated across India and worldwide, is famously known as the "Festival of Lights"?',
+        options: ['Diwali', 'Carnival', 'Oktoberfest', 'Midsummer'],
+        correctIndex: 0,
+        hint: 'Homes are decorated with oil lamps called diyas and colorful rangoli.'
+      },
+      {
+        difficulty: 'Normal',
+        category: 'Culture',
+        question: 'What is the traditional Spanish afternoon custom of taking a short rest or midday break called?',
+        options: ['Fiesta', 'Siesta', 'Tapas', 'Flamenco'],
+        correctIndex: 1,
+        hint: 'It historically helped people rest during the hottest hours of the afternoon.'
+      },
+      {
+        difficulty: 'Normal',
+        category: 'Culture',
+        question: 'In Māori culture of New Zealand, what is the traditional ceremonial posture dance called?',
+        options: ['Haka', 'Samba', 'Kabuki', 'Waltz'],
+        correctIndex: 0,
+        hint: 'It is famously performed by New Zealand’s national rugby team before matches.'
+      },
+      {
+        difficulty: 'Hard',
+        category: 'Culture',
+        question: 'Which ancient writing system used wedge-shaped marks pressed into clay tablets in Mesopotamia?',
+        options: ['Hieroglyphics', 'Cuneiform', 'Cyrillic', 'Runes'],
+        correctIndex: 1,
+        hint: 'Its name comes from the Latin word "cuneus," meaning wedge.'
+      },
+      {
+        difficulty: 'Hard',
+        category: 'Culture',
+        question: 'What does UNESCO designate when it names a site a "World Heritage Site"?',
+        options: ['A place of outstanding cultural or natural importance to humanity', 'An international airport hub', 'A private commercial theme park', 'A military boundary'],
+        correctIndex: 0,
+        hint: 'Examples include Machu Picchu, the Great Barrier Reef, and the Pyramids of Giza.'
+      },
+
+      // --- 11. TECHNOLOGY (6 questions) ---
+      {
+        difficulty: 'Easy',
+        category: 'Technology',
+        question: 'What does "Wi-Fi" allow devices like smartphones and laptops to do?',
+        options: ['Connect to a local network and the internet wirelessly', 'Charge batteries using sunlight', 'Print documents without ink', 'Cool down internal processors'],
+        correctIndex: 0,
+        hint: 'It uses radio waves instead of physical Ethernet cables.'
+      },
+      {
+        difficulty: 'Easy',
+        category: 'Technology',
+        question: 'What does "CPU" stand for in computing?',
+        options: ['Central Processing Unit', 'Computer Power Utility', 'Cloud Program Uploader', 'Compact Pixel Unit'],
+        correctIndex: 0,
+        hint: 'It is often called the "brain" of a computer.'
+      },
+      {
+        difficulty: 'Normal',
+        category: 'Technology',
+        question: 'What is the primary purpose of two-factor authentication (2FA)?',
+        options: ['Making internet speeds faster', 'Adding a second verification step beyond just a password', 'Compressing video files', 'Translating websites automatically'],
+        correctIndex: 1,
+        hint: 'Even if someone guesses your password, they still need a second code or device.'
+      },
+      {
+        difficulty: 'Normal',
+        category: 'Technology',
+        question: 'What is "cloud storage"?',
+        options: ['Saving data on remote servers accessed over the internet', 'Storing files inside weather balloons', 'Keeping backups only on floppy disks', 'A type of screen saver'],
+        correctIndex: 0,
+        hint: 'It lets you access your photos and documents from multiple devices.'
+      },
+      {
+        difficulty: 'Hard',
+        category: 'Technology',
+        question: 'What does "HTTPS" at the beginning of a website address indicate?',
+        options: ['Communication between your browser and the site is encrypted', 'The site works without electricity', 'The page contains only images', 'The website is hosted offline'],
+        correctIndex: 0,
+        hint: 'The "S" stands for Secure, using TLS encryption.'
+      },
+      {
+        difficulty: 'Hard',
+        category: 'Technology',
+        question: 'In software development, what is an "open-source" license?',
+        options: ['Source code is publicly accessible for inspection, modification, and sharing under license terms', 'Software that cannot run on laptops', 'A program with no user interface', 'Hardware sold without a case'],
+        correctIndex: 0,
+        hint: 'Linux, Python, and Firefox are prominent examples.'
+      },
+
+      // --- 12. HISTORY (6 questions) ---
+      {
+        difficulty: 'Easy',
+        category: 'History',
+        question: 'Which ancient civilization built the Great Pyramids at Giza?',
+        options: ['Ancient Romans', 'Ancient Egyptians', 'Vikings', 'Mayans'],
+        correctIndex: 1,
+        hint: 'They flourished along the Nile River in North Africa.'
+      },
+      {
+        difficulty: 'Easy',
+        category: 'History',
+        question: 'Who was the first human being to walk on the surface of the Moon in 1969?',
+        options: ['Yuri Gagarin', 'Neil Armstrong', 'Buzz Aldrin', 'John Glenn'],
+        correctIndex: 1,
+        hint: 'He commanded the Apollo 11 mission.'
+      },
+      {
+        difficulty: 'Normal',
+        category: 'History',
+        question: 'How did Johannes Gutenberg’s movable-type printing press transform 15th-century Europe?',
+        options: ['It made books affordable and accelerated the spread of literacy and ideas', 'It replaced all ships with trains', 'It invented wireless radio', 'It ended the use of paper'],
+        correctIndex: 0,
+        hint: 'Before this invention, books had to be copied painstakingly by hand.'
+      },
+      {
+        difficulty: 'Normal',
+        category: 'History',
+        question: 'What was the Silk Road in world history?',
+        options: ['A single paved highway in Rome', 'A network of Eurasian trade routes connecting East and West', 'A canal in South America', 'An underground tunnel system'],
+        correctIndex: 1,
+        hint: 'Merchants traded silk, spices, glassware, paper, and cultural ideas along these routes.'
+      },
+      {
+        difficulty: 'Hard',
+        category: 'History',
+        question: 'Which ancient artifact discovered in 1799 helped scholars decipher Egyptian hieroglyphs?',
+        options: ['The Rosetta Stone', 'The Terracotta Army', 'The Antikythera Mechanism', 'The Bayeux Tapestry'],
+        correctIndex: 0,
+        hint: 'It featured the same decree carved in Hieroglyphic, Demotic, and Ancient Greek scripts.'
+      },
+      {
+        difficulty: 'Hard',
+        category: 'History',
+        question: 'What major global public health milestone was officially declared achieved by the WHO in 1980?',
+        options: ['Eradication of smallpox', 'Discovery of vitamins', 'Invention of the stethoscope', 'Elimination of the common cold'],
+        correctIndex: 0,
+        hint: 'Through global vaccination campaigns, this became the first human infectious disease wiped out worldwide.'
+      },
+
+      // --- 13. NATURE (6 questions) ---
+      {
+        difficulty: 'Easy',
+        category: 'Nature',
+        question: 'What natural process turns liquid water from oceans and lakes into invisible water vapor in the air?',
+        options: ['Evaporation', 'Condensation', 'Erosion', 'Fossilization'],
+        correctIndex: 0,
+        hint: 'Warmth from the Sun powers this upward step of the water cycle.'
+      },
+      {
+        difficulty: 'Easy',
+        category: 'Nature',
+        question: 'What can the concentric rings inside a cut tree trunk reveal?',
+        options: ['The tree’s age and past climate conditions', 'The depth of nearby oceans', 'The speed of wind', 'The number of birds nearby'],
+        correctIndex: 0,
+        hint: 'Each year of growth typically adds one light-and-dark ring pair.'
+      },
+      {
+        difficulty: 'Normal',
+        category: 'Nature',
+        question: 'What causes ocean tides on Earth?',
+        options: ['Gravitational pull of the Moon and the Sun combined with Earth’s rotation', 'Underwater volcanoes erupting daily', 'Whales swimming in groups', 'Seasonal rainfall'],
+        correctIndex: 0,
+        hint: 'The Moon’s gravity pulls ocean water slightly outward on the side facing it.'
+      },
+      {
+        difficulty: 'Normal',
+        category: 'Nature',
+        question: 'Why are rainforests often called the "lungs of the planet" (alongside ocean phytoplankton)?',
+        options: ['They absorb huge amounts of carbon dioxide and produce oxygen', 'They blow strong winds across continents', 'They filter salt out of seawater', 'They store underground lava'],
+        correctIndex: 0,
+        hint: 'Dense tropical vegetation carries out massive-scale photosynthesis.'
+      },
+      {
+        difficulty: 'Hard',
+        category: 'Nature',
+        question: 'What creates the colorful glowing curtains of the Aurora Borealis (Northern Lights)?',
+        options: ['Charged solar particles colliding with gases in Earth’s upper atmosphere', 'Sunlight reflecting off Arctic icebergs', 'Lightning inside low rain clouds', 'Volcanic ash glowing at night'],
+        correctIndex: 0,
+        hint: 'Earth’s magnetic field guides solar wind particles toward the polar regions.'
+      },
+      {
+        difficulty: 'Hard',
+        category: 'Nature',
+        question: 'What is "bioluminescence" in nature?',
+        options: ['Light produced by living organisms through chemical reactions', 'Sunlight trapped inside quartz crystals', 'Reflection from wet leaves', 'Heat radiated by desert sand'],
+        correctIndex: 0,
+        hint: 'Fireflies, anglerfish, and certain plankton use this natural glow.'
+      },
+
+      // --- 14. ANIMALS (6 questions) ---
+      {
+        difficulty: 'Easy',
+        category: 'Animals',
+        question: 'Which reptile is famous for its ability to change skin color for camouflage and communication?',
+        options: ['Chameleon', 'Alligator', 'Tortoise', 'Komodo dragon'],
+        correctIndex: 0,
+        hint: 'It also has independently moving eyes and a long sticky tongue.'
+      },
+      {
+        difficulty: 'Easy',
+        category: 'Animals',
+        question: 'Which is the largest living animal on Earth today?',
+        options: ['African Elephant', 'Blue Whale', 'Giraffe', 'Great White Shark'],
+        correctIndex: 1,
+        hint: 'This marine mammal can grow longer than two school buses.'
+      },
+      {
+        difficulty: 'Normal',
+        category: 'Animals',
+        question: 'How do bats navigate and locate insects in complete darkness?',
+        options: ['Echolocation using high-frequency sound waves', 'Thermal heat vision', 'Magnetic compasses in their wings', 'Ultraviolet glowing eyes'],
+        correctIndex: 0,
+        hint: 'They emit ultrasonic clicks and listen for the returning echoes.'
+      },
+      {
+        difficulty: 'Normal',
+        category: 'Animals',
+        question: 'Why do honeybees perform a "waggle dance" inside the hive?',
+        options: ['To communicate the direction and distance to rich flower patches', 'To cool down the queen', 'To frighten away bears', 'To sharpen their wings'],
+        correctIndex: 0,
+        hint: 'The angle of the dance relative to gravity points toward the Sun’s angle to nectar.'
+      },
+      {
+        difficulty: 'Hard',
+        category: 'Animals',
+        question: 'Which unusual trait distinguishes the platypus from almost all other mammals?',
+        options: ['It lays eggs instead of giving birth to live young', 'It breathes underwater with gills', 'It has feathers instead of fur', 'It is cold-blooded like a lizard'],
+        correctIndex: 0,
+        hint: 'Along with echidnas, it belongs to an ancient mammal group called monotremes.'
+      },
+      {
+        difficulty: 'Hard',
+        category: 'Animals',
+        question: 'How many hearts does an octopus have?',
+        options: ['One', 'Two', 'Three', 'Five'],
+        correctIndex: 2,
+        hint: 'Two pump blood through its gills, and a third circulates blood to the rest of its body.'
+      },
+
+      // --- 15. HEALTH EDUCATION (6 questions) ---
+      {
+        difficulty: 'Easy',
+        category: 'Health Education',
+        question: 'How long do health experts recommend scrubbing your hands with soap and water to effectively remove germs?',
+        options: ['At least 20 seconds', '2 seconds', '5 minutes', 'Only when hands look muddy'],
+        correctIndex: 0,
+        hint: 'About the time it takes to hum "Happy Birthday" twice.'
+      },
+      {
+        difficulty: 'Easy',
+        category: 'Health Education',
+        question: 'Why is drinking enough water every day essential for human health?',
+        options: ['It regulates body temperature, transports nutrients, and supports organ function', 'It replaces all need for sleep', 'It permanently turns hair curly', 'It blocks all UV rays'],
+        correctIndex: 0,
+        hint: 'The human body is composed of roughly 60% water.'
+      },
+      {
+        difficulty: 'Normal',
+        category: 'Health Education',
+        question: 'What is the main purpose of a vaccine?',
+        options: ['To train the immune system to recognize and fight specific pathogens safely', 'To cure broken bones', 'To replace healthy nutrition', 'To lower body temperature permanently'],
+        correctIndex: 0,
+        hint: 'It stimulates protective antibodies without causing the full disease.'
+      },
+      {
+        difficulty: 'Normal',
+        category: 'Health Education',
+        question: 'Why are antibiotics ineffective against illnesses like the common cold or flu?',
+        options: ['Colds and flu are caused by viruses, while antibiotics target bacteria', 'Antibiotics only work on skin', 'Viruses are larger than bacteria', 'Cold medicine cancels them out'],
+        correctIndex: 0,
+        hint: 'Antibacterial drugs do not destroy viral particles.'
+      },
+      {
+        difficulty: 'Hard',
+        category: 'Health Education',
+        question: 'Which vitamin does human skin synthesize when exposed to moderate sunlight, aiding calcium absorption for strong bones?',
+        options: ['Vitamin D', 'Vitamin C', 'Vitamin B12', 'Vitamin K'],
+        correctIndex: 0,
+        hint: 'It is often nicknamed the "sunshine vitamin."'
+      },
+      {
+        difficulty: 'Hard',
+        category: 'Health Education',
+        question: 'What does "cardiovascular endurance" measure in physical fitness?',
+        options: ['How efficiently the heart, lungs, and blood vessels supply oxygen during sustained exercise', 'Maximum grip strength in one hand', 'Flexibility of the ankles', 'Resting eyesight sharpness'],
+        correctIndex: 0,
+        hint: 'Activities like brisk walking, swimming, and cycling improve this capacity.'
+      },
+
+      // --- 16. SOCIAL AWARENESS (6 questions) ---
+      {
+        difficulty: 'Easy',
+        category: 'Social Awareness',
+        question: 'What is the core meaning of "empathy"?',
+        options: ['Understanding and sharing the feelings of another person', 'Winning every argument', 'Ignoring other viewpoints', 'Speaking louder than everyone else'],
+        correctIndex: 0,
+        hint: 'It is often described as putting yourself in someone else’s shoes.'
+      },
+      {
+        difficulty: 'Easy',
+        category: 'Social Awareness',
+        question: 'Why do public buildings include ramps, tactile paving, and Braille signage?',
+        options: ['To ensure accessibility and equal participation for people with disabilities', 'To decorate sidewalks', 'To store extra equipment', 'To slow down pedestrians'],
+        correctIndex: 0,
+        hint: 'Inclusive design removes barriers so everyone can navigate spaces independently.'
+      },
+      {
+        difficulty: 'Normal',
+        category: 'Social Awareness',
+        question: 'What is "digital citizenship"?',
+        options: ['Responsible, ethical, and respectful behavior when using technology and online spaces', 'Buying the newest smartphone every year', 'Having fast home internet', 'Playing video games offline'],
+        correctIndex: 0,
+        hint: 'It includes protecting privacy, verifying sources, and treating others kindly online.'
+      },
+      {
+        difficulty: 'Normal',
+        category: 'Social Awareness',
+        question: 'How does recycling and reducing single-use waste benefit local communities?',
+        options: ['It conserves resources, reduces landfill pollution, and keeps neighborhoods cleaner', 'It increases litter in waterways', 'It uses more raw mining', 'It eliminates the need for clean water'],
+        correctIndex: 0,
+        hint: 'The "Reduce, Reuse, Recycle" hierarchy minimizes environmental harm.'
+      },
+      {
+        difficulty: 'Hard',
+        category: 'Social Awareness',
+        question: 'What is "media literacy"?',
+        options: ['The ability to critically access, analyze, evaluate, and verify information across media', 'Memorizing television schedules', 'Writing only fictional stories', 'Avoiding all news sources'],
+        correctIndex: 0,
+        hint: 'It helps citizens distinguish credible journalism from misinformation or manipulation.'
+      },
+      {
+        difficulty: 'Hard',
+        category: 'Social Awareness',
+        question: 'What is the difference between "equality" and "equity" in community support?',
+        options: ['Equality gives everyone the same resources; equity provides tailored support based on individual needs', 'Equality is only for schools', 'Equity means giving nothing to anyone', 'Both words have identical definitions'],
+        correctIndex: 0,
+        hint: 'One focuses on identical distribution, while the other focuses on fair access to success.'
+      },
+
+      // --- 17. LOGIC AND CRITICAL THINKING (6 questions) ---
+      {
+        difficulty: 'Easy',
+        category: 'Logic and Critical Thinking',
+        question: 'If all roses are flowers, and some flowers fade quickly, which statement must be true?',
+        options: ['All roses fade quickly', 'All roses are flowers', 'No flowers are roses', 'Only roses fade quickly'],
+        correctIndex: 1,
+        hint: 'Look directly at the first premise given in the sentence.'
+      },
+      {
+        difficulty: 'Easy',
+        category: 'Logic and Critical Thinking',
+        question: 'A farmer has a fox, a chicken, and a bag of grain to cross a river in a tiny boat that holds only the farmer plus one item. Which item must go across first?',
+        options: ['The fox', 'The chicken', 'The grain', 'Leave all three behind'],
+        correctIndex: 1,
+        hint: 'If you leave the fox alone with the grain, neither eats the other!'
+      },
+      {
+        difficulty: 'Normal',
+        category: 'Logic and Critical Thinking',
+        question: 'What is a "straw man" fallacy in a debate?',
+        options: ['Misrepresenting an opponent’s argument to make it easier to attack', 'Using too many statistics', 'Asking a polite question', 'Agreeing with the main point'],
+        correctIndex: 0,
+        hint: 'Instead of addressing the real position, someone knocks down an exaggerated fake version.'
+      },
+      {
+        difficulty: 'Normal',
+        category: 'Logic and Critical Thinking',
+        question: 'You have two identical-looking opaque jars: one labeled "Apples", one labeled "Oranges", and both labels are swapped. How many fruits do you need to pick from ONE jar to know both contents?',
+        options: ['One fruit', 'Five fruits', 'Ten fruits', 'It is impossible'],
+        correctIndex: 0,
+        hint: 'Since both labels are guaranteed wrong, inspecting a single item reveals what that jar actually holds.'
+      },
+      {
+        difficulty: 'Hard',
+        category: 'Logic and Critical Thinking',
+        question: 'Why does "correlation does not imply causation" matter in critical thinking?',
+        options: ['Two trends occurring together do not prove one directly caused the other', 'Graphs are always inaccurate', 'Events can never have causes', 'Statistics only apply to weather'],
+        correctIndex: 0,
+        hint: 'Ice cream sales and sunglasses sales both rise in summer, yet neither causes the other.'
+      },
+      {
+        difficulty: 'Hard',
+        category: 'Logic and Critical Thinking',
+        question: 'What is "Occam’s Razor" as a problem-solving principle?',
+        options: ['Among competing explanations that fit the facts, the simplest one with fewest assumptions is preferred', 'The longest explanation is always true', 'Never test hypotheses', 'Complex theories require no evidence'],
+        correctIndex: 0,
+        hint: 'When you hear hoofbeats in a farmyard, think horses before zebras.'
+      }
+    ];
+
+    /* ==========================================================================
+       3. GAME CONSTANTS, REWARDS, XP & SHOP ITEMS
+       ========================================================================== */
+    const DIFFICULTY_CONFIG = {
+      Easy: {
+        label: 'EASY',
+        subtitle: 'Simple & Fun',
+        synxPerCorrect: 3,
+        xpPerCorrect: 10,
+        themeBtn: 'btn-green',
+        badgeBg: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+        cardBorder: 'border-emerald-300'
+      },
+      Normal: {
+        label: 'NORMAL',
+        subtitle: 'A Balanced Challenge',
+        synxPerCorrect: 5,
+        xpPerCorrect: 20,
+        themeBtn: 'btn-blue',
+        badgeBg: 'bg-sky-100 text-sky-800 border-sky-300',
+        cardBorder: 'border-sky-300'
+      },
+      Hard: {
+        label: 'HARD',
+        subtitle: 'For True Thinkers',
+        synxPerCorrect: 15,
+        xpPerCorrect: 35,
+        themeBtn: 'btn-pink',
+        badgeBg: 'bg-pink-100 text-pink-800 border-pink-300',
+        cardBorder: 'border-pink-300'
+      }
+    };
+
+    const HINT_COST = 15;
+    const QUESTIONS_PER_ROUND = 10;
+
+    const SHOP_COSMETICS = [
+      {
+        id: 'classic',
+        name: 'Scholar Glasses & Purple Tome',
+        desc: 'Classic signature look of the RANDOM MIND Brain Mascot.',
+        cost: 0,
+        tag: 'Default'
+      },
+      {
+        id: 'starlight',
+        name: 'Starlight Frames & Golden Book',
+        desc: 'Bright gold-rimmed glasses and an illuminated golden encyclopedia.',
+        cost: 45,
+        tag: 'Cosmetic'
+      },
+      {
+        id: 'cosmic',
+        name: 'Cosmic Crown & Nebula Grimoire',
+        desc: 'Royal star crown and enchanted cosmic tome for master thinkers.',
+        cost: 90,
+        tag: 'Cosmetic'
+      }
+    ];
+
+    /* ==========================================================================
+       4. PERSISTENT STATE & LOCAL STORAGE MANAGER
+       ========================================================================== */
+    const STORAGE_KEY = 'random_mind_save_v1';
+
+    function getDefaultState() {
+      return {
+        onboardingComplete: false,
+        experienceType: 'first_timer', // 'first_timer' | 'expert'
+        authProvider: 'Local Guest',
+        playerName: 'Curious Thinker',
+        synx: 50, // Starts at 50 SYNX per specification
+        xp: 0,
+        roundsCompleted: 0,
+        totalCorrect: 0,
+        totalAnswered: 0,
+        history: [], // { date, difficulty, score, synxEarned }
+        unlockedCosmetics: ['classic'],
+        equippedCosmetic: 'classic',
+        lastDailyClaimDate: '',
+        settings: {
+          sound: false,
+          music: false
+        }
+      };
+    }
+
+    let playerState = loadPlayerState();
+
+    function loadPlayerState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return getDefaultState();
+        const parsed = JSON.parse(raw);
+        return {
+          ...getDefaultState(),
+          ...parsed,
+          settings: { ...getDefaultState().settings, ...(parsed.settings || {}) }
+        };
+      } catch (e) {
+        return getDefaultState();
+      }
+    }
+
+    function savePlayerState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(playerState));
+      } catch (e) {
+        // Ignore storage quota issues in restricted environments
+      }
+    }
+
+    // Calculate player level from XP (100 XP per level, distinct from Easy/Normal/Hard)
+    function getLevelInfo(xp) {
+      const level = Math.floor(xp / 100) + 1;
+      const currentLevelXp = xp % 100;
+      const nextLevelXp = 100;
+      return { level, currentLevelXp, nextLevelXp };
+    }
+
+    /* ==========================================================================
+       5. RUNTIME SESSION STATE (Navigation & Active Quiz Round)
+       ========================================================================== */
+    let currentScreen = 'loading'; // loading | onboarding | signin | expert_login | home | difficulty | offline | quiz | results | level | shop | settings
+
+    let quizSession = {
+      active: false,
+      isOffline: false,
+      difficulty: 'Normal',
+      questions: [],
+      currentIndex: 0,
+      selectedOption: null,
+      submitted: false,
+      isProcessing: false,
+      hintUsedOnCurrent: false,
+      score: 0,
+      synxEarned: 0
+    };
+
+    /* ==========================================================================
+       6. SHARED VISUAL SVG ASSETS (Mascot, Logo, Icons, Clouds, Trophy)
+       ========================================================================== */
+    function renderStarBackdrop() {
+      const layer = document.getElementById('star-layer');
+      if (!layer) return;
+      const dots = [
+        { top: '6%', left: '12%', size: 3, op: 0.9 },
+        { top: '9%', left: '84%', size: 4, op: 0.95 },
+        { top: '14%', left: '28%', size: 2, op: 0.7 },
+        { top: '17%', left: '70%', size: 3, op: 0.85 },
+        { top: '22%', left: '9%', size: 3, op: 0.8 },
+        { top: '26%', left: '91%', size: 2, op: 0.75 },
+        { top: '34%', left: '16%', size: 2, op: 0.65 },
+        { top: '38%', left: '82%', size: 3, op: 0.8 },
+        { top: '48%', left: '7%', size: 3, op: 0.7 },
+        { top: '54%', left: '93%', size: 3, op: 0.75 },
+        { top: '64%', left: '18%', size: 2, op: 0.6 },
+        { top: '68%', left: '79%', size: 2, op: 0.65 }
+      ];
+
+      const fourPointStars = [
+        { top: '8%', left: '22%', size: 14, color: '#fff3a1' },
+        { top: '12%', left: '76%', size: 16, color: '#ffffff' },
+        { top: '25%', left: '86%', size: 12, color: '#d8b4fe' },
+        { top: '31%', left: '11%', size: 13, color: '#fff3a1' },
+        { top: '58%', left: '88%', size: 14, color: '#ffffff' }
+      ];
+
+      let html = '';
+      dots.forEach(d => {
+        html += `<span class="star-dot" style="top:${d.top};left:${d.left};width:${d.size}px;height:${d.size}px;opacity:${d.op};"></span>`;
+      });
+      fourPointStars.forEach(s => {
+        html += `
+          <svg class="star-four" style="top:${s.top};left:${s.left};width:${s.size}px;height:${s.size}px;" viewBox="0 0 24 24" fill="${s.color}">
+            <path d="M12 1L14.6 9.4L23 12L14.6 14.6L12 23L9.4 14.6L1 12L9.4 9.4L12 1Z"/>
+          </svg>
+        `;
+      });
+      layer.innerHTML = html;
+    }
+
+    function getCloudsSVG() {
+      return `
+        <div class="clouds-footer" aria-hidden="true">
+          <svg viewBox="0 0 440 90" width="100%" height="90" preserveAspectRatio="none">
+            <path d="M-20,90 L-20,52 Q15,28 52,48 Q88,20 135,44 Q180,18 228,45 Q275,20 322,46 Q368,24 406,48 Q435,34 460,52 L460,90 Z" fill="rgba(220, 212, 255, 0.45)"/>
+            <path d="M-15,90 L-15,62 Q24,38 66,58 Q112,32 162,56 Q214,34 264,58 Q312,35 362,58 Q404,40 455,62 L455,90 Z" fill="#f3efff"/>
+          </svg>
+        </div>
+      `;
+    }
+
+    function getLogoHTML(size = 'md') {
+      const sizeClasses = size === 'lg'
+        ? 'text-[42px] sm:text-[46px]'
+        : size === 'sm'
+          ? 'text-[26px]'
+          : 'text-[34px]';
+      return `
+        <div class="rm-logo-wrap select-none">
+          <span class="rm-word-random ${sizeClasses}">RANDOM</span>
+          <span class="rm-word-mind ${sizeClasses} -mt-1">MIND</span>
+        </div>
+      `;
+    }
+
+    // Custom Pink Brain Mascot with Round Glasses & Purple Book (supports equipped cosmetics)
+    function getMascotSVG(size = 132, celebrate = false) {
+      const cos = playerState.equippedCosmetic || 'classic';
+      const frameColor = cos === 'starlight' ? '#f59e0b' : cos === 'cosmic' ? '#38bdf8' : '#351a75';
+      const bookCover = cos === 'starlight' ? '#f59e0b' : cos === 'cosmic' ? '#4f46e5' : '#7c3aed';
+      const bookAccent = cos === 'starlight' ? '#fef08a' : cos === 'cosmic' ? '#67e8f9' : '#e9d5ff';
+
+      return `
+        <svg width="${size}" height="${size}" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="RANDOM MIND Pink Brain Mascot">
+          <!-- Soft magical aura -->
+          <circle cx="100" cy="102" r="76" fill="rgba(255, 255, 255, 0.12)" />
+
+          <!-- Little Cute Arms holding book -->
+          <path d="M52 122 C36 126, 38 144, 58 145" stroke="#5c1d45" stroke-width="5" stroke-linecap="round" fill="#ff9ec4"/>
+          <path d="M148 122 C164 126, 162 144, 142 145" stroke="#5c1d45" stroke-width="5" stroke-linecap="round" fill="#ff9ec4"/>
+
+          <!-- Little Feet -->
+          <ellipse cx="82" cy="166" rx="13" ry="7" fill="#f472b6" stroke="#5c1d45" stroke-width="4"/>
+          <ellipse cx="118" cy="166" rx="13" ry="7" fill="#f472b6" stroke="#5c1d45" stroke-width="4"/>
+
+          <!-- Main Pink Brain Body -->
+          <path d="M100 36
+                   C78 36, 62 46, 56 60
+                   C42 64, 36 78, 41 92
+                   C35 104, 41 122, 56 128
+                   C64 142, 82 148, 100 146
+                   C118 148, 136 142, 144 128
+                   C159 122, 165 104, 159 92
+                   C164 78, 158 64, 144 60
+                   C138 46, 122 36, 100 36 Z"
+                fill="#ff9ec4" stroke="#5c1d45" stroke-width="5" stroke-linejoin="round"/>
+
+          <!-- Brain Top Highlight & Folds -->
+          <path d="M72 48 C82 43, 92 45, 96 50" stroke="#ffd1e3" stroke-width="4" stroke-linecap="round"/>
+          <path d="M100 38 L100 62" stroke="#d95b96" stroke-width="4" stroke-linecap="round"/>
+          <path d="M62 66 C72 64, 78 70, 76 76" stroke="#d95b96" stroke-width="3.5" stroke-linecap="round"/>
+          <path d="M138 66 C128 64, 122 70, 124 76" stroke="#d95b96" stroke-width="3.5" stroke-linecap="round"/>
+          <path d="M50 96 C58 94, 62 100, 58 106" stroke="#d95b96" stroke-width="3.5" stroke-linecap="round"/>
+          <path d="M150 96 C142 94, 138 100, 142 106" stroke="#d95b96" stroke-width="3.5" stroke-linecap="round"/>
+
+          <!-- Optional Cosmic Crown Cosmetic -->
+          ${cos === 'cosmic' ? `
+            <path d="M76 38 L82 20 L100 30 L118 20 L124 38 Z" fill="#ffd93b" stroke="#5c1d45" stroke-width="3.5" stroke-linejoin="round"/>
+            <circle cx="100" cy="24" r="3" fill="#38bdf8"/>
+          ` : ''}
+
+          <!-- Cute Rosy Cheeks -->
+          <ellipse cx="64" cy="106" rx="8" ry="5" fill="#ff66a3" opacity="0.75"/>
+          <ellipse cx="136" cy="106" rx="8" ry="5" fill="#ff66a3" opacity="0.75"/>
+
+          <!-- Round Glasses Frames & Lenses -->
+          <circle cx="79" cy="90" r="18" fill="#ffffff" stroke="${frameColor}" stroke-width="5"/>
+          <circle cx="121" cy="90" r="18" fill="#ffffff" stroke="${frameColor}" stroke-width="5"/>
+          <line x1="97" y1="90" x2="103" y2="90" stroke="${frameColor}" stroke-width="5" stroke-linecap="round"/>
+          <line x1="56" y1="86" x2="61" y2="88" stroke="${frameColor}" stroke-width="4" stroke-linecap="round"/>
+          <line x1="144" y1="86" x2="139" y2="88" stroke="${frameColor}" stroke-width="4" stroke-linecap="round"/>
+
+          <!-- Expressive Eyes inside Glasses -->
+          ${celebrate ? `
+            <path d="M72 91 Q79 82 86 91" stroke="#2c1663" stroke-width="4" stroke-linecap="round" fill="none"/>
+            <path d="M114 91 Q121 82 128 91" stroke="#2c1663" stroke-width="4" stroke-linecap="round" fill="none"/>
+          ` : `
+            <circle cx="80" cy="90" r="6.5" fill="#2c1663"/>
+            <circle cx="82.5" cy="87.5" r="2.2" fill="#ffffff"/>
+            <circle cx="120" cy="90" r="6.5" fill="#2c1663"/>
+            <circle cx="122.5" cy="87.5" r="2.2" fill="#ffffff"/>
+          `}
+
+          <!-- Friendly Smile -->
+          <path d="M92 111 Q100 119 108 111" stroke="#5c1d45" stroke-width="3.8" stroke-linecap="round" fill="none"/>
+
+          <!-- Open Book held in front -->
+          <g transform="translate(0, 4)">
+            <!-- Book Back Cover -->
+            <path d="M56 124 L100 131 L144 124 L148 158 L100 165 L52 158 Z" fill="${bookCover}" stroke="#351a75" stroke-width="4" stroke-linejoin="round"/>
+            <!-- Crisp White Book Pages -->
+            <path d="M60 121 L100 128 L140 121 L142 153 L100 160 L58 153 Z" fill="#ffffff" stroke="#351a75" stroke-width="3" stroke-linejoin="round"/>
+            <!-- Center Spine Crease -->
+            <line x1="100" y1="128" x2="100" y2="160" stroke="#a78bfa" stroke-width="2.5"/>
+            <!-- Page Lines -->
+            <line x1="68" y1="132" x2="91" y2="135" stroke="${bookAccent}" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="68" y1="141" x2="91" y2="144" stroke="${bookAccent}" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="109" y1="135" x2="132" y2="132" stroke="${bookAccent}" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="109" y1="144" x2="132" y2="141" stroke="${bookAccent}" stroke-width="2.5" stroke-linecap="round"/>
+          </g>
+        </svg>
+      `;
+    }
+
+    // Crisp 15px UI Icons (Supporting text, never overpowering)
+    const ICONS = {
+      plant: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/></svg>`,
+      trophy: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>`,
+      play: `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>`,
+      level: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>`,
+      offline: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="2" x2="22" y2="22"/><path d="M8.5 16.5a5 5 0 0 1 7 0"/><path d="M2 8.82a15 15 0 0 1 4.17-2.65"/><path d="M10.66 5c4.01-.36 8.14.9 11.34 3.76"/><path d="M16.85 11.25a10 10 0 0 1 2.22 1.68"/><path d="M5 13a10 10 0 0 1 5.24-2.76"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>`,
+      shop: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>`,
+      settings: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
+      gift: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>`,
+      star: `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`,
+      bolt: `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>`,
+      crown: `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M2 19h20v3H2v-3zm1-11l5 4 4-7 4 7 5-4-2 9H5L3 8z"/></svg>`,
+      bulb: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>`,
+      back: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>`,
+      user: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+      check: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`
+    };
+
+    function getGoldTrophySVG() {
+      return `
+        <svg width="96" height="96" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Gold Trophy">
+          <circle cx="60" cy="56" r="46" fill="rgba(255, 217, 59, 0.2)" />
+          <!-- Handles -->
+          <path d="M35 32 H22 C16 32, 16 52, 32 54" stroke="#f59e0b" stroke-width="6" stroke-linecap="round" fill="none"/>
+          <path d="M85 32 H98 C104 32, 104 52, 88 54" stroke="#f59e0b" stroke-width="6" stroke-linecap="round" fill="none"/>
+          <!-- Cup -->
+          <path d="M34 24 H86 L80 62 C78 74, 42 74, 40 62 L34 24 Z" fill="#ffd93b" stroke="#92400e" stroke-width="4" stroke-linejoin="round"/>
+          <!-- Stem -->
+          <rect x="53" y="71" width="14" height="18" fill="#f59e0b" stroke="#92400e" stroke-width="3.5"/>
+          <!-- Pedestal -->
+          <rect x="38" y="88" width="44" height="12" rx="4" fill="#7c3aed" stroke="#351a75" stroke-width="3.5"/>
+          <!-- Star Emblem -->
+          <path d="M60 35 L63.5 43 L72 44 L65.5 49.5 L67.5 58 L60 53.5 L52.5 58 L54.5 49.5 L48 44 L56.5 43 Z" fill="#ffffff"/>
+        </svg>
+      `;
+    }
+
+    function formatSynx(amount) {
+      return `$ ${amount} SYNX`;
+    }
+
+    /* ==========================================================================
+       7. MODAL & MESSAGE POPUP SYSTEM (Replaces alert/confirm, handles Hint Popup)
+       ========================================================================== */
+    function closeModal() {
+      const modalRoot = document.getElementById('modal-root');
+      if (modalRoot) modalRoot.innerHTML = '';
+    }
+
+    function showHintModal(hintText) {
+      const modalRoot = document.getElementById('modal-root');
+      modalRoot.innerHTML = `
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-5" style="background: rgba(18, 7, 46, 0.76);">
+          <div class="lavender-card w-full max-w-[360px] p-5 text-center">
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-800 border border-amber-300 text-xs font-extrabold mb-3">
+              ${ICONS.bulb}
+              <span>CLUE UNLOCKED (-15 SYNX)</span>
+            </div>
+            <h3 class="font-logo text-xl text-[#351a75] mb-2">Helpful Hint</h3>
+            <p class="text-sm font-bold text-[#4b328a] bg-white border border-[#e3d9ff] rounded-2xl p-3.5 leading-relaxed mb-4">
+              "${escapeHtml(hintText)}"
+            </p>
+            <button type="button" onclick="closeModal()" class="rm-btn btn-purple w-full py-2.5 text-sm">
+              Got it!
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function showInfoModal(title, badgeText, bodyHtml, confirmAction = null, confirmLabel = 'Confirm') {
+      const modalRoot = document.getElementById('modal-root');
+      window.__pendingModalAction = confirmAction;
+      modalRoot.innerHTML = `
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-5" style="background: rgba(18, 7, 46, 0.76);">
+          <div class="lavender-card w-full max-w-[370px] p-5 text-left">
+            <div class="flex items-center justify-between mb-2">
+              <span class="px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-800 text-[11px] font-extrabold">${escapeHtml(badgeText)}</span>
+            </div>
+            <h3 class="font-logo text-xl text-[#351a75] mb-2">${escapeHtml(title)}</h3>
+            <div class="text-xs font-semibold text-[#473182] bg-white border border-[#e3d9ff] rounded-2xl p-3.5 leading-relaxed max-h-[260px] overflow-y-auto mb-4">
+              ${bodyHtml}
+            </div>
+            <div class="flex gap-2">
+              ${confirmAction ? `
+                <button type="button" onclick="closeModal()" class="rm-btn btn-lavender flex-1 py-2.5 text-xs">Cancel</button>
+                <button type="button" onclick="executePendingModalAction()" class="rm-btn btn-pink flex-1 py-2.5 text-xs">${escapeHtml(confirmLabel)}</button>
+              ` : `
+                <button type="button" onclick="closeModal()" class="rm-btn btn-purple w-full py-2.5 text-sm">Got it!</button>
+              `}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function executePendingModalAction() {
+      const fn = window.__pendingModalAction;
+      window.__pendingModalAction = null;
+      closeModal();
+      if (typeof fn === 'function') fn();
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    /* ==========================================================================
+       8. NAVIGATION & QUIZ ENGINE LOGIC
+       ========================================================================== */
+    function navigateTo(screen) {
+      currentScreen = screen;
+      renderScreen();
+    }
+
+    // Build a randomized 10-question round matching selected difficulty with maximum category diversity
+    function generateRoundQuestions(difficulty) {
+      const pool = QUESTION_BANK.filter(q => q.difficulty === difficulty);
+      // Shuffle pool using Fisher-Yates
+      const shuffled = [...pool];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+
+      // Prioritize distinct categories first, then fill up to 10 without duplicates
+      const selected = [];
+      const usedCategories = new Set();
+      const usedQuestions = new Set();
+
+      for (const q of shuffled) {
+        if (selected.length >= QUESTIONS_PER_ROUND) break;
+        if (!usedCategories.has(q.category)) {
+          selected.push(q);
+          usedCategories.add(q.category);
+          usedQuestions.add(q.question);
+        }
+      }
+
+      for (const q of shuffled) {
+        if (selected.length >= QUESTIONS_PER_ROUND) break;
+        if (!usedQuestions.has(q.question)) {
+          selected.push(q);
+          usedQuestions.add(q.question);
+        }
+      }
+
+      // Final shuffle of selected 10 questions so categories appear in unpredictable order
+      for (let i = selected.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [selected[i], selected[j]] = [selected[j], selected[i]];
+      }
+
+      return selected;
+    }
+
+    function startQuizRound(difficulty, isOffline = false) {
+      const questions = generateRoundQuestions(difficulty);
+      quizSession = {
+        active: true,
+        isOffline: Boolean(isOffline),
+        difficulty,
+        questions,
+        currentIndex: 0,
+        selectedOption: null,
+        submitted: false,
+        isProcessing: false,
+        hintUsedOnCurrent: false,
+        score: 0,
+        synxEarned: 0
+      };
+      navigateTo('quiz');
+    }
+
+    function selectAnswerOption(idx) {
+      if (quizSession.submitted || quizSession.isProcessing) return;
+      quizSession.selectedOption = idx;
+      renderScreen();
+    }
+
+    function submitCurrentAnswer() {
+      if (quizSession.selectedOption === null || quizSession.submitted || quizSession.isProcessing) {
+        return;
+      }
+      quizSession.isProcessing = true;
+      quizSession.submitted = true;
+
+      const currentQ = quizSession.questions[quizSession.currentIndex];
+      const isCorrect = quizSession.selectedOption === currentQ.correctIndex;
+
+      if (isCorrect) {
+        quizSession.score += 1;
+        if (!quizSession.isOffline) {
+          const reward = DIFFICULTY_CONFIG[quizSession.difficulty].synxPerCorrect;
+          quizSession.synxEarned += reward;
+          playerState.synx += reward;
+          savePlayerState();
+        }
+      }
+
+      quizSession.isProcessing = false;
+      renderScreen();
+    }
+
+    function useHintOnQuestion() {
+      if (quizSession.isOffline || quizSession.submitted || quizSession.hintUsedOnCurrent) return;
+
+      if (playerState.synx < HINT_COST) {
+        showInfoModal(
+          'Not Enough SYNX',
+          'HINT · 15 SYNX',
+          `<p>You currently have <strong>${formatSynx(playerState.synx)}</strong>, and a hint costs <strong>${HINT_COST} SYNX</strong>.</p><p class="mt-2">Answer questions correctly in Ranked Play or claim your Daily Gift on the Home Screen to earn more SYNX!</p>`
+        );
+        return;
+      }
+
+      playerState.synx -= HINT_COST;
+      quizSession.hintUsedOnCurrent = true;
+      savePlayerState();
+      renderScreen();
+
+      const currentQ = quizSession.questions[quizSession.currentIndex];
+      showHintModal(currentQ.hint);
+    }
+
+    function advanceQuizStep() {
+      if (!quizSession.submitted) return;
+
+      if (quizSession.currentIndex + 1 < quizSession.questions.length) {
+        quizSession.currentIndex += 1;
+        quizSession.selectedOption = null;
+        quizSession.submitted = false;
+        quizSession.hintUsedOnCurrent = false;
+        renderScreen();
+      } else {
+        completeQuizRound();
+      }
+    }
+
+    function completeQuizRound() {
+      const totalQ = quizSession.questions.length;
+      const correctCount = quizSession.score;
+
+      // Save ranked progression & stats ONLY when NOT in Offline Practice Mode
+      if (!quizSession.isOffline) {
+        const xpEarned = correctCount * DIFFICULTY_CONFIG[quizSession.difficulty].xpPerCorrect;
+        playerState.xp += xpEarned;
+        playerState.roundsCompleted += 1;
+        playerState.totalCorrect += correctCount;
+        playerState.totalAnswered += totalQ;
+
+        playerState.history.unshift({
+          date: new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+          difficulty: quizSession.difficulty,
+          score: `${correctCount}/${totalQ}`,
+          synxEarned: quizSession.synxEarned
+        });
+        if (playerState.history.length > 15) {
+          playerState.history = playerState.history.slice(0, 15);
+        }
+        savePlayerState();
+      }
+
+      quizSession.active = false;
+      navigateTo('results');
+    }
+
+    /* ==========================================================================
+       9. SCREEN RENDERERS (All 13 Screens)
+       ========================================================================== */
+    function renderScreen() {
+      const root = document.getElementById('screen-root');
+      if (!root) return;
+
+      switch (currentScreen) {
+        case 'loading':
+          root.innerHTML = viewLoadingScreen();
+          break;
+        case 'onboarding':
+          root.innerHTML = viewOnboardingScreen();
+          break;
+        case 'signin':
+          root.innerHTML = viewAuthScreen('signin');
+          break;
+        case 'expert_login':
+          root.innerHTML = viewAuthScreen('expert_login');
+          break;
+        case 'home':
+          root.innerHTML = viewHomeScreen();
+          break;
+        case 'difficulty':
+          root.innerHTML = viewDifficultyScreen(false);
+          break;
+        case 'offline':
+          root.innerHTML = viewDifficultyScreen(true);
+          break;
+        case 'quiz':
+          root.innerHTML = viewQuizScreen();
+          break;
+        case 'results':
+          root.innerHTML = viewResultsScreen();
+          break;
+        case 'level':
+          root.innerHTML = viewLevelScreen();
+          break;
+        case 'shop':
+          root.innerHTML = viewShopScreen();
+          break;
+        case 'settings':
+          root.innerHTML = viewSettingsScreen();
+          break;
+        default:
+          root.innerHTML = viewHomeScreen();
+      }
+    }
+
+    /* --- SCREEN 1: LOADING SCREEN --- */
+    function viewLoadingScreen() {
+      return `
+        <div class="screen-body justify-between items-center text-center pt-10 pb-24">
+          <div class="mt-4">
+            ${getLogoHTML('lg')}
+            <p class="text-white font-extrabold text-sm tracking-wide mt-2 drop-shadow">
+              Think. Guess. Learn!
+            </p>
+          </div>
+
+          <div class="my-auto flex flex-col items-center">
+            ${getMascotSVG(168, false)}
+          </div>
+
+          <div class="w-full max-w-[280px] z-10">
+            <div class="w-full h-4 rounded-full bg-[#1e0d4d] border-2 border-[#a78bfa] p-0.5 overflow-hidden mb-2">
+              <div id="loading-fill" class="h-full rounded-full bg-gradient-to-r from-[#ffd93b] via-[#ff85b3] to-[#43d97b]" style="width: 15%; transition: width 0.25s ease;"></div>
+            </div>
+            <p id="loading-label" class="text-white font-extrabold text-xs tracking-wider uppercase">
+              Loading...
+            </p>
+          </div>
+        </div>
+        ${getCloudsSVG()}
+      `;
+    }
+
+    function runInitialLoadingSequence() {
+      let pct = 15;
+      const interval = setInterval(() => {
+        pct += 22;
+        const bar = document.getElementById('loading-fill');
+        if (bar) bar.style.width = Math.min(pct, 100) + '%';
+
+        if (pct >= 100) {
+          clearInterval(interval);
+          setTimeout(() => {
+            if (playerState.onboardingComplete) {
+              navigateTo('home');
+            } else {
+              navigateTo('onboarding');
+            }
+          }, 260);
+        }
+      }, 220);
+    }
+
+    /* --- SCREEN 2: FIRST-TIME ONBOARDING --- */
+    function viewOnboardingScreen() {
+      return `
+        <div class="screen-body justify-between items-center text-center pt-6 pb-20">
+          <div class="flex flex-col items-center">
+            ${getLogoHTML('sm')}
+            <div class="mt-1">${getMascotSVG(112, false)}</div>
+          </div>
+
+          <div class="lavender-card w-full p-5 text-center my-auto">
+            <h1 class="font-logo text-2xl text-[#351a75] mb-1">First Time Here?</h1>
+            <p class="text-xs font-extrabold text-[#6749b5] mb-4">Choose your experience:</p>
+
+            <div class="space-y-3 text-left">
+              <button type="button" onclick="chooseOnboarding('first_timer')" class="w-full bg-white hover:bg-[#f3eeff] border-2 border-[#c7b5ff] rounded-2xl p-3.5 flex items-center gap-3 cursor-pointer shadow-sm">
+                <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 border border-emerald-300 flex items-center justify-center shrink-0">
+                  ${ICONS.plant}
+                </div>
+                <div class="flex-1">
+                  <div class="font-logo text-base text-[#351a75]">FIRST TIMER</div>
+                  <div class="text-xs font-bold text-[#5e43a6]">Sign in to save your progress!</div>
+                </div>
+              </button>
+
+              <button type="button" onclick="chooseOnboarding('expert')" class="w-full bg-white hover:bg-[#f3eeff] border-2 border-[#c7b5ff] rounded-2xl p-3.5 flex items-center gap-3 cursor-pointer shadow-sm">
+                <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 border border-amber-300 flex items-center justify-center shrink-0">
+                  ${ICONS.trophy}
+                </div>
+                <div class="flex-1">
+                  <div class="font-logo text-base text-[#351a75]">EXPERT</div>
+                  <div class="text-xs font-bold text-[#5e43a6]">Just log in to continue.</div>
+                </div>
+              </button>
+            </div>
+
+            <p class="text-[11px] font-bold text-[#7558bf] mt-4">
+              You can change this later in Settings.
+            </p>
+          </div>
+        </div>
+        ${getCloudsSVG()}
+      `;
+    }
+
+    function chooseOnboarding(type) {
+      playerState.experienceType = type;
+      savePlayerState();
+      if (type === 'first_timer') {
+        navigateTo('signin');
+      } else {
+        navigateTo('expert_login');
+      }
+    }
+
+    /* --- SCREEN 3 & 4: SIGN-IN & EXPERT LOGIN (Honest Demo Local Profile) --- */
+    function viewAuthScreen(mode) {
+      const isFirstTimer = mode === 'signin';
+      return `
+        <div class="screen-body justify-between pt-4 pb-20">
+          <div class="flex items-center justify-between">
+            <button type="button" onclick="navigateTo('onboarding')" class="rm-btn btn-lavender px-3 py-1.5 text-xs">
+              ${ICONS.back}
+              <span>Back</span>
+            </button>
+            <span class="px-2.5 py-1 rounded-full bg-white/15 text-white text-[11px] font-extrabold border border-white/25">
+              Demo Local Profile
+            </span>
+          </div>
+
+          <div class="flex flex-col items-center text-center my-1">
+            ${getMascotSVG(98, false)}
+          </div>
+
+          <div class="lavender-card w-full p-5 text-center my-auto">
+            <h1 class="font-logo text-2xl text-[#351a75] mb-1">
+              ${isFirstTimer ? 'Sign In' : 'Expert Log In'}
+            </h1>
+            <p class="text-xs font-bold text-[#5e43a6] mb-3">
+              ${isFirstTimer ? 'Save your progress and unlock more features!' : 'Welcome back! Load your local player profile.'}
+            </p>
+
+            <!-- Clear disclosure per specification: No fake OAuth -->
+            <div class="bg-amber-50 border border-amber-300 rounded-xl p-2.5 text-[11px] font-bold text-amber-900 mb-3 text-left">
+              Prototype Notice: External Google/Apple OAuth requires Firebase/Supabase backend keys. Choose a Demo Profile below to save locally on this device.
+            </div>
+
+            <div class="text-left mb-3">
+              <label for="auth-player-name" class="block text-[11px] font-extrabold text-[#472c8c] uppercase mb-1">
+                Player Nickname
+              </label>
+              <input id="auth-player-name" type="text" maxlength="20" value="${escapeHtml(playerState.playerName)}"
+                placeholder="Enter your player name"
+                class="w-full px-3.5 py-2 rounded-xl bg-white border-2 border-[#cbbaff] text-sm font-extrabold text-[#2e166b] focus:outline-none focus:border-[#6f3ee0]" />
+            </div>
+
+            <div class="space-y-2.5">
+              <button type="button" onclick="completeDemoAuth('Google (Demo Local)')" class="rm-btn btn-blue w-full py-2.5 text-xs">
+                ${ICONS.user}
+                <span>Continue with Google (Demo)</span>
+              </button>
+              <button type="button" onclick="completeDemoAuth('Apple (Demo Local)')" class="rm-btn btn-purple w-full py-2.5 text-xs">
+                ${ICONS.user}
+                <span>Continue with Apple (Demo)</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        ${getCloudsSVG()}
+      `;
+    }
+
+    function completeDemoAuth(providerLabel) {
+      const input = document.getElementById('auth-player-name');
+      const cleanName = input ? input.value.trim() : '';
+      if (cleanName) {
+        playerState.playerName = cleanName;
+      }
+      playerState.authProvider = providerLabel;
+      playerState.onboardingComplete = true;
+      savePlayerState();
+      navigateTo('home');
+    }
+
+    /* --- SCREEN 5: HOME SCREEN --- */
+    function viewHomeScreen() {
+      const todayKey = new Date().toISOString().slice(0, 10);
+      const dailyClaimed = playerState.lastDailyClaimDate === todayKey;
+      const lvl = getLevelInfo(playerState.xp).level;
+
+      return `
+        <div class="screen-body justify-between pt-4 pb-16">
+          <!-- Top Bar: Player Profile & SYNX Balance -->
+          <div class="flex items-center justify-between gap-2">
+            <button type="button" onclick="navigateTo('level')" class="flex items-center gap-2 bg-white/15 border border-white/25 rounded-full pl-1.5 pr-3 py-1 text-white">
+              <div class="w-7 h-7 rounded-full bg-[#ffd93b] text-[#351a75] flex items-center justify-center font-extrabold text-xs">
+                ${ICONS.user}
+              </div>
+              <div class="text-left leading-tight">
+                <div class="text-xs font-extrabold truncate max-w-[115px]">${escapeHtml(playerState.playerName)}</div>
+                <div class="text-[10px] font-bold text-purple-200">Lv. ${lvl}</div>
+              </div>
+            </button>
+
+            <button type="button" onclick="navigateTo('shop')" class="px-3.5 py-1.5 rounded-full bg-[#240f59] border-2 border-[#ffd93b] text-[#ffd93b] font-extrabold text-xs tracking-wide shadow">
+              ${formatSynx(playerState.synx)}
+            </button>
+          </div>
+
+          <!-- Center Logo, Mascot & Tagline -->
+          <div class="flex flex-col items-center text-center my-1">
+            ${getLogoHTML('md')}
+            <div class="my-1">${getMascotSVG(126, false)}</div>
+            <p class="text-white font-extrabold text-xs tracking-wide drop-shadow">
+              Think. Guess. Learn!
+            </p>
+          </div>
+
+          <!-- Main Stacked Action Buttons -->
+          <div class="w-full max-w-[310px] mx-auto space-y-2.5 my-1">
+            <button type="button" onclick="navigateTo('difficulty')" class="rm-btn btn-green w-full py-3 text-sm tracking-wide">
+              ${ICONS.play}
+              <span>PLAY</span>
+            </button>
+
+            <button type="button" onclick="navigateTo('level')" class="rm-btn btn-blue w-full py-3 text-sm tracking-wide">
+              ${ICONS.level}
+              <span>LEVEL</span>
+            </button>
+
+            <button type="button" onclick="navigateTo('offline')" class="rm-btn btn-purple w-full py-3 text-sm tracking-wide">
+              ${ICONS.offline}
+              <span>OFFLINE MODE</span>
+            </button>
+
+            <button type="button" onclick="navigateTo('shop')" class="rm-btn btn-orange w-full py-3 text-sm tracking-wide">
+              ${ICONS.shop}
+              <span>SYNX SHOP</span>
+            </button>
+          </div>
+
+          <!-- Bottom Bar: Settings (Bottom-Left) & Daily Gift Reward (Bottom-Right) -->
+          <div class="flex items-center justify-between pt-2 z-10">
+            <button type="button" onclick="navigateTo('settings')" class="rm-btn btn-lavender px-3.5 py-2 text-xs" aria-label="Settings">
+              ${ICONS.settings}
+              <span>Settings</span>
+            </button>
+
+            <button type="button" onclick="claimDailyGift()" class="rm-btn ${dailyClaimed ? 'btn-lavender' : 'btn-pink'} px-3.5 py-2 text-xs" aria-label="Daily Gift">
+              ${ICONS.gift}
+              <span>${dailyClaimed ? 'Gift Claimed' : 'Daily Gift'}</span>
+            </button>
+          </div>
+        </div>
+        ${getCloudsSVG()}
+      `;
+    }
+
+    function claimDailyGift() {
+      const todayKey = new Date().toISOString().slice(0, 10);
+      if (playerState.lastDailyClaimDate === todayKey) {
+        showInfoModal(
+          'Daily Gift Already Claimed',
+          'COME BACK TOMORROW',
+          `<p>You have already collected today's <strong>+15 SYNX</strong> study bonus! Return tomorrow for another free gift.</p>`
+        );
+        return;
+      }
+
+      playerState.lastDailyClaimDate = todayKey;
+      playerState.synx += 15;
+      savePlayerState();
+      renderScreen();
+      showInfoModal(
+        'Daily Gift Claimed!',
+        '+15 SYNX BONUS',
+        `<p>Awesome job keeping your curiosity sharp! <strong>+15 SYNX</strong> has been added to your balance.</p><p class="mt-2">Current Balance: <strong>${formatSynx(playerState.synx)}</strong></p>`
+      );
+    }
+
+    /* --- SCREEN 6 & 10: DIFFICULTY SELECTION (Ranked & Offline Practice Mode) --- */
+    function viewDifficultyScreen(isOffline) {
+      const cards = [
+        {
+          key: 'Easy',
+          icon: ICONS.star,
+          btnClass: 'btn-green',
+          accentBg: 'bg-emerald-100 text-emerald-700 border-emerald-300',
+          rewardText: isOffline ? 'Practice Mode (0 SYNX)' : '+3 SYNX per correct answer'
+        },
+        {
+          key: 'Normal',
+          icon: ICONS.bolt,
+          btnClass: 'btn-blue',
+          accentBg: 'bg-sky-100 text-sky-700 border-sky-300',
+          rewardText: isOffline ? 'Practice Mode (0 SYNX)' : '+5 SYNX per correct answer'
+        },
+        {
+          key: 'Hard',
+          icon: ICONS.crown,
+          btnClass: 'btn-pink',
+          accentBg: 'bg-pink-100 text-pink-700 border-pink-300',
+          rewardText: isOffline ? 'Practice Mode (0 SYNX)' : '+15 SYNX per correct answer'
+        }
+      ];
+
+      return `
+        <div class="screen-body justify-between pt-4 pb-16">
+          <div class="flex items-center justify-between">
+            <button type="button" onclick="navigateTo('home')" class="rm-btn btn-lavender px-3 py-1.5 text-xs">
+              ${ICONS.back}
+              <span>Home</span>
+            </button>
+            <span class="px-3 py-1 rounded-full bg-[#240f59] border border-[#ffd93b] text-[#ffd93b] font-extrabold text-xs">
+              ${formatSynx(playerState.synx)}
+            </span>
+          </div>
+
+          <div class="text-center my-2">
+            ${isOffline ? `
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-950/80 border border-purple-300/40 text-purple-100 text-[11px] font-extrabold mb-2">
+                ${ICONS.offline}
+                <span>OFFLINE PRACTICE MODE</span>
+              </span>
+            ` : ''}
+            <h1 class="font-logo text-3xl text-white drop-shadow">Choose Your Level</h1>
+            <p class="text-xs font-extrabold text-purple-100 mt-0.5">10 Questions per Round!</p>
+          </div>
+
+          ${isOffline ? `
+            <div class="bg-purple-950/75 border border-purple-300/35 rounded-2xl p-3 text-center text-xs font-bold text-purple-100 mb-2">
+              Offline practice uses locally stored questions. No SYNX rewards or ranked XP are awarded in this mode.
+            </div>
+          ` : ''}
+
+          <div class="space-y-3 my-auto">
+            ${cards.map(c => {
+              const cfg = DIFFICULTY_CONFIG[c.key];
+              return `
+                <div class="lavender-card p-3.5 flex items-center justify-between gap-3">
+                  <div class="flex items-center gap-3">
+                    <div class="w-11 h-11 rounded-2xl ${c.accentBg} border flex items-center justify-center shrink-0">
+                      ${c.icon}
+                    </div>
+                    <div>
+                      <div class="font-logo text-lg text-[#351a75] leading-tight">${cfg.label}</div>
+                      <div class="text-xs font-extrabold text-[#5c41a3]">${cfg.subtitle}</div>
+                      <div class="text-[11px] font-bold text-[#7c5cc9] mt-0.5">${c.rewardText}</div>
+                    </div>
+                  </div>
+                  <button type="button" onclick="startQuizRound('${c.key}', ${isOffline})" class="rm-btn ${c.btnClass} px-4 py-2.5 text-xs shrink-0">
+                    Start
+                  </button>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+        ${getCloudsSVG()}
+      `;
+    }
+
+    /* --- SCREEN 7: QUIZ SCREEN (10 Questions per Round) --- */
+    function viewQuizScreen() {
+      const q = quizSession.questions[quizSession.currentIndex];
+      const cfg = DIFFICULTY_CONFIG[quizSession.difficulty];
+      const qNum = quizSession.currentIndex + 1;
+      const totalQ = quizSession.questions.length;
+      const letters = ['A', 'B', 'C', 'D'];
+
+      const isCorrect = quizSession.submitted && quizSession.selectedOption === q.correctIndex;
+      const isLastQuestion = qNum === totalQ;
+
+      return `
+        <div class="screen-body justify-between pt-3 pb-6">
+          <!-- Top Status Bar -->
+          <div class="flex items-center justify-between gap-2 mb-2">
+            <button type="button" onclick="confirmQuitQuiz()" class="rm-btn btn-lavender px-2.5 py-1.5 text-xs">
+              ${ICONS.back}
+              <span>Quit</span>
+            </button>
+
+            <div class="flex items-center gap-1.5">
+              <span class="px-2.5 py-1 rounded-full bg-white/15 text-white text-xs font-extrabold border border-white/25">
+                ${qNum}/${totalQ}
+              </span>
+              <span class="px-2.5 py-1 rounded-full border text-xs font-extrabold ${cfg.badgeBg}">
+                ${cfg.label}
+              </span>
+            </div>
+
+            <span class="px-2.5 py-1 rounded-full bg-[#240f59] border border-[#ffd93b] text-[#ffd93b] font-extrabold text-xs">
+              ${formatSynx(playerState.synx)}
+            </span>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="w-full h-2 rounded-full bg-white/20 overflow-hidden mb-3">
+            <div class="h-full bg-[#ffd93b]" style="width: ${(qNum / totalQ) * 100}%;"></div>
+          </div>
+
+          <!-- Question Card -->
+          <div class="lavender-card p-4 flex-1 flex flex-col justify-between">
+            <div>
+              <!-- Category & Mode Tag -->
+              <div class="flex flex-wrap items-center justify-between gap-1.5 mb-2.5">
+                <span class="inline-block px-2.5 py-1 rounded-xl bg-purple-100 text-purple-900 border border-purple-200 text-[11px] font-extrabold leading-tight">
+                  ${escapeHtml(q.category)}
+                </span>
+                ${quizSession.isOffline ? `
+                  <span class="px-2 py-0.5 rounded-lg bg-slate-200 text-slate-700 text-[10px] font-extrabold">
+                    OFFLINE PRACTICE
+                  </span>
+                ` : ''}
+              </div>
+
+              <!-- Question Prompt -->
+              <h2 class="text-[15px] sm:text-base font-extrabold text-[#2a1361] leading-snug mb-3.5">
+                ${escapeHtml(q.question)}
+              </h2>
+
+              <!-- Four Answer Choices (A, B, C, D) -->
+              <div class="space-y-2">
+                ${q.options.map((opt, idx) => {
+                  let stateClass = '';
+                  if (quizSession.submitted) {
+                    if (idx === q.correctIndex) {
+                      stateClass = 'correct';
+                    } else if (idx === quizSession.selectedOption) {
+                      stateClass = 'incorrect';
+                    }
+                  } else if (quizSession.selectedOption === idx) {
+                    stateClass = 'selected';
+                  }
+
+                  return `
+                    <button type="button"
+                      onclick="selectAnswerOption(${idx})"
+                      ${quizSession.submitted ? 'disabled' : ''}
+                      class="option-card ${stateClass}">
+                      <span class="w-7 h-7 rounded-lg bg-[#efeaff] text-[#3b1d7a] border border-[#d1c2ff] flex items-center justify-center font-extrabold text-xs shrink-0">
+                        ${letters[idx]}
+                      </span>
+                      <span class="text-xs sm:text-[13px] font-bold text-[#2b1563] leading-snug flex-1">
+                        ${escapeHtml(opt)}
+                      </span>
+                    </button>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+
+            <!-- Feedback Banner (Shown after submission) -->
+            ${quizSession.submitted ? `
+              <div class="mt-3 p-3 rounded-2xl border ${isCorrect ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-rose-50 border-rose-300 text-rose-900'}">
+                <div class="text-xs font-extrabold flex items-center gap-1.5">
+                  ${isCorrect ? ICONS.check : ''}
+                  <span>
+                    ${isCorrect
+                      ? (quizSession.isOffline ? 'Correct! Great practice!' : `Correct! +${cfg.synxPerCorrect} SYNX earned!`)
+                      : `Incorrect! Correct answer: ${letters[q.correctIndex]}. ${escapeHtml(q.options[q.correctIndex])}`
+                    }
+                  </span>
+                </div>
+              </div>
+            ` : ''}
+
+            <!-- Bottom Controls: Hint Button & Submit / Next Button -->
+            <div class="mt-3.5 pt-2 border-t border-[#e5dcff] flex items-center gap-2">
+              ${!quizSession.isOffline ? `
+                <button type="button"
+                  onclick="useHintOnQuestion()"
+                  ${quizSession.submitted || quizSession.hintUsedOnCurrent ? 'disabled' : ''}
+                  class="rm-btn btn-orange px-3 py-2.5 text-xs shrink-0">
+                  ${ICONS.bulb}
+                  <span>${quizSession.hintUsedOnCurrent ? 'Hint Used' : 'Hint · 15 SYNX'}</span>
+                </button>
+              ` : `
+                <span class="text-[11px] font-bold text-[#6e52b8] px-1">
+                  Hints disabled offline
+                </span>
+              `}
+
+              ${!quizSession.submitted ? `
+                <button type="button"
+                  onclick="submitCurrentAnswer()"
+                  ${quizSession.selectedOption === null ? 'disabled' : ''}
+                  class="rm-btn btn-green flex-1 py-2.5 text-xs">
+                  <span>Submit Answer</span>
+                </button>
+              ` : `
+                <button type="button"
+                  onclick="advanceQuizStep()"
+                  class="rm-btn btn-blue flex-1 py-2.5 text-xs">
+                  <span>${isLastQuestion ? 'See Results' : 'Next Question'}</span>
+                </button>
+              `}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function confirmQuitQuiz() {
+      showInfoModal(
+        'Leave Current Round?',
+        'EXIT ROUND',
+        `<p>If you leave now, this 10-question round will not be completed.</p>`,
+        () => navigateTo('home'),
+        'Leave Round'
+      );
+    }
+
+    /* --- SCREEN 9: ROUND COMPLETION SCREEN --- */
+    function viewResultsScreen() {
+      const totalQ = quizSession.questions.length || 10;
+      const correct = quizSession.score;
+      const incorrect = totalQ - correct;
+      const accuracy = Math.round((correct / totalQ) * 100);
+      const isOffline = quizSession.isOffline;
+
+      return `
+        <div class="screen-body justify-between items-center text-center pt-5 pb-16">
+          <div>
+            <h1 class="font-logo text-3xl text-[#ffd93b] drop-shadow" style="-webkit-text-stroke: 3px #351a75; paint-order: stroke fill;">
+              ROUND COMPLETE!
+            </h1>
+            <p class="text-xs font-extrabold text-purple-100 mt-0.5">
+              ${isOffline ? 'Offline Practice Summary' : `${quizSession.difficulty} Difficulty Summary`}
+            </p>
+          </div>
+
+          <div class="flex items-center justify-center gap-2 my-1">
+            ${getGoldTrophySVG()}
+            ${getMascotSVG(94, true)}
+          </div>
+
+          <!-- Results Statistics Card -->
+          <div class="lavender-card w-full p-4 text-left my-auto">
+            <div class="flex items-center justify-between pb-2.5 mb-2.5 border-b border-[#e2d8ff]">
+              <span class="text-xs font-extrabold text-[#5a3fa3]">Your Score</span>
+              <span class="font-logo text-2xl text-[#351a75]">${correct}/${totalQ}</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div class="bg-white rounded-xl p-2.5 border border-[#e5dcff]">
+                <div class="text-[11px] font-bold text-[#6e52b8]">Accuracy</div>
+                <div class="text-base font-extrabold text-[#351a75]">${accuracy}%</div>
+              </div>
+              <div class="bg-white rounded-xl p-2.5 border border-[#e5dcff]">
+                <div class="text-[11px] font-bold text-[#6e52b8]">SYNX Earned</div>
+                <div class="text-base font-extrabold ${isOffline ? 'text-slate-500' : 'text-amber-600'}">
+                  ${isOffline ? '0 (Offline)' : `+${quizSession.synxEarned}`}
+                </div>
+              </div>
+              <div class="bg-emerald-50 rounded-xl p-2.5 border border-emerald-200">
+                <div class="text-[11px] font-bold text-emerald-700">Correct</div>
+                <div class="text-base font-extrabold text-emerald-800">${correct}</div>
+              </div>
+              <div class="bg-rose-50 rounded-xl p-2.5 border border-rose-200">
+                <div class="text-[11px] font-bold text-rose-700">Incorrect</div>
+                <div class="text-base font-extrabold text-rose-800">${incorrect}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons: END GAME & PLAY MORE (Normal / Hard / Easy) -->
+          <div class="w-full space-y-2 mt-3 z-10">
+            <div class="text-xs font-extrabold text-white tracking-wide uppercase">PLAY MORE</div>
+            <div class="grid grid-cols-3 gap-2">
+              <button type="button" onclick="startQuizRound('Easy', ${isOffline})" class="rm-btn btn-green py-2.5 text-xs">
+                Easy
+              </button>
+              <button type="button" onclick="startQuizRound('Normal', ${isOffline})" class="rm-btn btn-blue py-2.5 text-xs">
+                Normal
+              </button>
+              <button type="button" onclick="startQuizRound('Hard', ${isOffline})" class="rm-btn btn-pink py-2.5 text-xs">
+                Hard
+              </button>
+            </div>
+            <button type="button" onclick="navigateTo('home')" class="rm-btn btn-lavender w-full py-2.5 text-xs">
+              END GAME
+            </button>
+          </div>
+        </div>
+        ${getCloudsSVG()}
+      `;
+    }
+
+    /* --- SCREEN 11: PLAYER LEVEL & PROGRESSION SCREEN --- */
+    function viewLevelScreen() {
+      const { level, currentLevelXp, nextLevelXp } = getLevelInfo(playerState.xp);
+      const overallAcc = playerState.totalAnswered > 0
+        ? Math.round((playerState.totalCorrect / playerState.totalAnswered) * 100)
+        : 0;
+
+      return `
+        <div class="screen-body pt-4 pb-16">
+          <div class="flex items-center justify-between mb-3">
+            <button type="button" onclick="navigateTo('home')" class="rm-btn btn-lavender px-3 py-1.5 text-xs">
+              ${ICONS.back}
+              <span>Home</span>
+            </button>
+            <span class="px-3 py-1 rounded-full bg-[#240f59] border border-[#ffd93b] text-[#ffd93b] font-extrabold text-xs">
+              ${formatSynx(playerState.synx)}
+            </span>
+          </div>
+
+          <h1 class="font-logo text-2xl text-white text-center mb-3 drop-shadow">Player Progression</h1>
+
+          <!-- XP & Scholar Level Card -->
+          <div class="lavender-card p-4 mb-3">
+            <div class="flex items-center justify-between mb-2">
+              <div>
+                <div class="text-[11px] font-extrabold text-[#6b4eb5] uppercase">Scholar Rank</div>
+                <div class="font-logo text-2xl text-[#351a75]">Level ${level}</div>
+              </div>
+              <div class="text-right">
+                <div class="text-[11px] font-bold text-[#6b4eb5]">Total XP</div>
+                <div class="text-sm font-extrabold text-[#351a75]">${playerState.xp} XP</div>
+              </div>
+            </div>
+
+            <div class="w-full h-3 rounded-full bg-[#e3d9ff] overflow-hidden mb-1">
+              <div class="h-full bg-gradient-to-r from-[#6f3ee0] to-[#3b82f6]" style="width: ${(currentLevelXp / nextLevelXp) * 100}%;"></div>
+            </div>
+            <div class="flex justify-between text-[11px] font-bold text-[#6347ab]">
+              <span>Progress to Level ${level + 1}</span>
+              <span>${currentLevelXp} / ${nextLevelXp} XP</span>
+            </div>
+          </div>
+
+          <!-- Lifetime Statistics Grid -->
+          <div class="lavender-card p-4 mb-3">
+            <h2 class="font-logo text-base text-[#351a75] mb-2.5">Lifetime Statistics</h2>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div class="bg-white rounded-xl p-2.5 border border-[#e5dcff]">
+                <div class="text-[11px] font-bold text-[#6e52b8]">Rounds Completed</div>
+                <div class="text-base font-extrabold text-[#351a75]">${playerState.roundsCompleted}</div>
+              </div>
+              <div class="bg-white rounded-xl p-2.5 border border-[#e5dcff]">
+                <div class="text-[11px] font-bold text-[#6e52b8]">Overall Accuracy</div>
+                <div class="text-base font-extrabold text-[#351a75]">${overallAcc}%</div>
+              </div>
+              <div class="bg-white rounded-xl p-2.5 border border-[#e5dcff]">
+                <div class="text-[11px] font-bold text-[#6e52b8]">Correct Answers</div>
+                <div class="text-base font-extrabold text-emerald-700">${playerState.totalCorrect}</div>
+              </div>
+              <div class="bg-white rounded-xl p-2.5 border border-[#e5dcff]">
+                <div class="text-[11px] font-bold text-[#6e52b8]">Questions Answered</div>
+                <div class="text-base font-extrabold text-[#351a75]">${playerState.totalAnswered}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Ranked Rounds -->
+          <div class="lavender-card p-4">
+            <h2 class="font-logo text-base text-[#351a75] mb-2">Recent Ranked Rounds</h2>
+            ${playerState.history.length === 0 ? `
+              <p class="text-xs font-bold text-[#6e52b8]">No ranked rounds completed yet. Tap PLAY on Home to begin!</p>
+            ` : `
+              <div class="space-y-1.5">
+                ${playerState.history.slice(0, 5).map(item => `
+                  <div class="bg-white rounded-xl px-3 py-2 border border-[#e5dcff] flex items-center justify-between text-xs">
+                    <div>
+                      <span class="font-extrabold text-[#351a75]">${escapeHtml(item.difficulty)}</span>
+                      <span class="text-[#785cc2] ml-1.5">${escapeHtml(item.date)}</span>
+                    </div>
+                    <div class="flex items-center gap-2.5">
+                      <span class="font-extrabold text-[#351a75]">${escapeHtml(item.score)}</span>
+                      <span class="font-extrabold text-amber-600">+${item.synxEarned} SYNX</span>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            `}
+          </div>
+        </div>
+        ${getCloudsSVG()}
+      `;
+    }
+
+    /* --- SCREEN 12: SYNX SHOP SCREEN --- */
+    function viewShopScreen() {
+      return `
+        <div class="screen-body pt-4 pb-16">
+          <div class="flex items-center justify-between mb-3">
+            <button type="button" onclick="navigateTo('home')" class="rm-btn btn-lavender px-3 py-1.5 text-xs">
+              ${ICONS.back}
+              <span>Home</span>
+            </button>
+            <span class="px-3 py-1 rounded-full bg-[#240f59] border-2 border-[#ffd93b] text-[#ffd93b] font-extrabold text-xs">
+              ${formatSynx(playerState.synx)}
+            </span>
+          </div>
+
+          <h1 class="font-logo text-2xl text-white text-center mb-1 drop-shadow">SYNX Shop</h1>
+          <p class="text-xs font-bold text-purple-100 text-center mb-3">
+            Earn SYNX by answering questions correctly—no real-money purchases.
+          </p>
+
+          <!-- In-Game Hint Info Card -->
+          <div class="lavender-card p-3.5 mb-3 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 border border-amber-300 flex items-center justify-center shrink-0">
+              ${ICONS.bulb}
+            </div>
+            <div>
+              <div class="font-logo text-sm text-[#351a75]">In-Quiz Clue · 15 SYNX</div>
+              <div class="text-xs font-bold text-[#5e43a6]">
+                Available during any Ranked question when you need a helpful nudge without spoiling the answer.
+              </div>
+            </div>
+          </div>
+
+          <!-- Mascot Cosmetic Rewards -->
+          <div class="lavender-card p-4">
+            <div class="flex items-center justify-between mb-2.5">
+              <h2 class="font-logo text-base text-[#351a75]">Brain Mascot Styles</h2>
+              <div>${getMascotSVG(52, false)}</div>
+            </div>
+
+            <div class="space-y-2.5">
+              ${SHOP_COSMETICS.map(item => {
+                const unlocked = playerState.unlockedCosmetics.includes(item.id);
+                const equipped = playerState.equippedCosmetic === item.id;
+                return `
+                  <div class="bg-white rounded-2xl p-3 border border-[#e3d9ff] flex items-center justify-between gap-2.5">
+                    <div>
+                      <div class="text-xs font-extrabold text-[#351a75]">${escapeHtml(item.name)}</div>
+                      <div class="text-[11px] font-semibold text-[#6448ad] mt-0.5">${escapeHtml(item.desc)}</div>
+                    </div>
+                    ${equipped ? `
+                      <span class="px-3 py-1.5 rounded-xl bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-extrabold shrink-0">
+                        Equipped
+                      </span>
+                    ` : unlocked ? `
+                      <button type="button" onclick="equipCosmetic('${item.id}')" class="rm-btn btn-blue px-3 py-1.5 text-xs shrink-0">
+                        Equip
+                      </button>
+                    ` : `
+                      <button type="button" onclick="buyCosmetic('${item.id}', ${item.cost})" class="rm-btn btn-orange px-3 py-1.5 text-xs shrink-0">
+                        ${item.cost} SYNX
+                      </button>
+                    `}
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        </div>
+        ${getCloudsSVG()}
+      `;
+    }
+
+    function buyCosmetic(id, cost) {
+      if (playerState.synx < cost) {
+        showInfoModal(
+          'Not Enough SYNX',
+          `REQUIRES ${cost} SYNX`,
+          `<p>You have <strong>${formatSynx(playerState.synx)}</strong>. Complete Ranked rounds to earn more SYNX!</p>`
+        );
+        return;
+      }
+      playerState.synx -= cost;
+      playerState.unlockedCosmetics.push(id);
+      playerState.equippedCosmetic = id;
+      savePlayerState();
+      renderScreen();
+    }
+
+    function equipCosmetic(id) {
+      playerState.equippedCosmetic = id;
+      savePlayerState();
+      renderScreen();
+    }
+
+    /* --- SCREEN 13: SETTINGS SCREEN --- */
+    function viewSettingsScreen() {
+      return `
+        <div class="screen-body pt-4 pb-16">
+          <div class="flex items-center justify-between mb-3">
+            <button type="button" onclick="navigateTo('home')" class="rm-btn btn-lavender px-3 py-1.5 text-xs">
+              ${ICONS.back}
+              <span>Home</span>
+            </button>
+            <span class="px-2.5 py-1 rounded-full bg-white/15 text-white text-[11px] font-extrabold border border-white/25">
+              PWA: ${escapeHtml(PWA_STATUS.swState)}
+            </span>
+          </div>
+
+          <h1 class="font-logo text-2xl text-white text-center mb-3 drop-shadow">Settings</h1>
+
+          <!-- Audio Preferences -->
+          <div class="lavender-card p-4 mb-3 space-y-2.5">
+            <h2 class="font-logo text-base text-[#351a75]">Audio Preferences</h2>
+            <div class="flex items-center justify-between bg-white rounded-xl px-3 py-2 border border-[#e5dcff]">
+              <span class="text-xs font-extrabold text-[#351a75]">Sound Effects (Minimal UI Mode)</span>
+              <button type="button" onclick="toggleSetting('sound')" class="rm-btn ${playerState.settings.sound ? 'btn-green' : 'btn-lavender'} px-3 py-1 text-xs">
+                ${playerState.settings.sound ? 'On' : 'Off'}
+              </button>
+            </div>
+            <div class="flex items-center justify-between bg-white rounded-xl px-3 py-2 border border-[#e5dcff]">
+              <span class="text-xs font-extrabold text-[#351a75]">Background Music</span>
+              <button type="button" onclick="toggleSetting('music')" class="rm-btn ${playerState.settings.music ? 'btn-green' : 'btn-lavender'} px-3 py-1 text-xs">
+                ${playerState.settings.music ? 'On' : 'Off'}
+              </button>
+            </div>
+          </div>
+
+          <!-- Account Information & Player Name -->
+          <div class="lavender-card p-4 mb-3 space-y-2.5">
+            <h2 class="font-logo text-base text-[#351a75]">Account & Profile</h2>
+            <div class="text-xs font-bold text-[#5e43a6]">
+              Sign-in Mode: <strong class="text-[#351a75]">${escapeHtml(playerState.authProvider)}</strong>
+            </div>
+
+            <div class="flex gap-2">
+              <input id="settings-name-input" type="text" maxlength="20" value="${escapeHtml(playerState.playerName)}"
+                class="flex-1 px-3 py-2 rounded-xl bg-white border-2 border-[#cbbaff] text-xs font-extrabold text-[#2e166b] focus:outline-none focus:border-[#6f3ee0]" />
+              <button type="button" onclick="updatePlayerNameFromSettings()" class="rm-btn btn-blue px-3.5 py-2 text-xs">
+                Save Name
+              </button>
+            </div>
+
+            <button type="button" onclick="navigateTo('onboarding')" class="rm-btn btn-lavender w-full py-2 text-xs">
+              Switch Onboarding Experience (First Timer / Expert)
+            </button>
+          </div>
+
+          <!-- Privacy, Terms, Log Out & Account Deletion -->
+          <div class="lavender-card p-4 space-y-2">
+            <div class="grid grid-cols-2 gap-2">
+              <button type="button" onclick="openPrivacyModal()" class="rm-btn btn-lavender py-2 text-xs">
+                Privacy Info
+              </button>
+              <button type="button" onclick="openTermsModal()" class="rm-btn btn-lavender py-2 text-xs">
+                Terms of Service
+              </button>
+            </div>
+
+            <button type="button" onclick="handleLogout()" class="rm-btn btn-purple w-full py-2 text-xs">
+              Log Out
+            </button>
+
+            <button type="button" onclick="confirmDeleteAccount()" class="rm-btn btn-pink w-full py-2 text-xs">
+              Delete Account & Reset Data
+            </button>
+          </div>
+        </div>
+        ${getCloudsSVG()}
+      `;
+    }
+
+    function toggleSetting(key) {
+      playerState.settings[key] = !playerState.settings[key];
+      savePlayerState();
+      renderScreen();
+    }
+
+    function updatePlayerNameFromSettings() {
+      const input = document.getElementById('settings-name-input');
+      const val = input ? input.value.trim() : '';
+      if (!val) return;
+      playerState.playerName = val;
+      savePlayerState();
+      renderScreen();
+      showInfoModal('Profile Updated', 'SAVED', `<p>Your player name has been updated to <strong>${escapeHtml(val)}</strong>.</p>`);
+    }
+
+    function openPrivacyModal() {
+      showInfoModal(
+        'Privacy Information',
+        'LOCAL STORAGE FIRST',
+        `<p><strong>RANDOM MIND</strong> stores your player profile, SYNX balance, XP progression, and settings locally on your device via browser Local Storage.</p><p class="mt-2">No passwords are stored in local storage, and no personal data is transmitted to third-party servers in this prototype build.</p>`
+      );
+    }
+
+    function openTermsModal() {
+      showInfoModal(
+        'Terms of Service',
+        'EDUCATIONAL QUIZ',
+        `<p><strong>RANDOM MIND</strong> is designed for educational entertainment and general knowledge learning across 17 subject categories.</p><p class="mt-2">SYNX is a virtual in-game reward currency with no real-world monetary value.</p>`
+      );
+    }
+
+    function handleLogout() {
+      playerState.onboardingComplete = false;
+      savePlayerState();
+      navigateTo('onboarding');
+    }
+
+    function confirmDeleteAccount() {
+      showInfoModal(
+        'Delete Local Account Data?',
+        'PERMANENT RESET',
+        `<p>This will permanently erase your saved progress, player level, and reset your SYNX balance back to <strong>$ 50 SYNX</strong>.</p>`,
+        () => {
+          localStorage.removeItem(STORAGE_KEY);
+          playerState = getDefaultState();
+          navigateTo('onboarding');
+        },
+        'Delete Everything'
+      );
+    }
+
+    /* ==========================================================================
+       10. INITIALIZATION ON WINDOW LOAD
+       ========================================================================== */
+    window.onload = function () {
+      renderStarBackdrop();
+      renderScreen();
+      runInitialLoadingSequence();
+    };
+  </script>
+</body>
+</html>
